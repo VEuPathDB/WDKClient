@@ -1,0 +1,19 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "target": "es2017",
+    "module": "esnext",
+    "allowJs": true,
+    "noImplicitAny": true,
+    "removeComments": false,
+    "preserveConstEnums": true,
+    "allowSyntheticDefaultImports": true,
+    "noImplicitReturns": true,
+    "sourceMap": true,
+    "jsx": "react",
+    "strict": true,
+    "lib": [ "dom", "dom.iterable", "esnext" ],
+    "moduleResolution": "node",
+    "experimentalDecorators": true
+  }
+}
