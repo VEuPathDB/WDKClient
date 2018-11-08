@@ -7,6 +7,7 @@ import * as Decode from './Json';
 import { Ontology } from './OntologyUtils';
 import { alert } from './Platform';
 import { pendingPromise, synchronized } from './PromiseUtils';
+import { StepAnalysisConfig, stepAnalysisDecoder, stepAnalysisConfigDecoder, stepAnalysisTypeDecoder, stepAnalysisStatusDecoder, FormParams } from './StepAnalysisUtils';
 import { PreferenceScope, Step, User, UserPreferences, UserWithPrefs, strategyDecoder } from './WdkUser';
 
 import { CategoryTreeNode, pruneUnknownPaths, resolveWdkReferences, sortOntology } from './CategoryUtils';
@@ -1027,6 +1028,118 @@ export default class WdkService {
       method: 'POST',
       body: JSON.stringify(config)
     }).then(response => response.id)
+  }
+
+  getStepAnalysisTypes(stepId: number) {
+    return this.sendRequest(
+      Decode.arrayOf(stepAnalysisTypeDecoder),
+      {
+        path: `/users/current/steps/${stepId}/analysis-types`,
+        method: 'GET'
+      }
+    );
+  }
+
+  getStepAnalysisTypeMetadata(stepId: number, analysisTypeName: string) {
+    return this.sendRequest(
+      Decode.ok,
+      {
+        path: `/users/current/steps/${stepId}/analysis-types/${analysisTypeName}`,
+        method: 'GET'
+      }
+    );
+  }
+
+  getAppliedStepAnalyses(stepId: number) {
+    return this.sendRequest(
+      Decode.arrayOf(stepAnalysisDecoder),
+      {
+        path: `/users/current/steps/${stepId}/analyses`,
+        method: 'GET'
+      }
+    );
+  }
+
+  createStepAnalysis(stepId: number, analysisConfig: Partial<StepAnalysisConfig>) {
+    return this.sendRequest(
+      stepAnalysisConfigDecoder,
+      {
+        path: `/users/current/steps/${stepId}/analyses`,
+        method: 'POST',
+        body: JSON.stringify(analysisConfig)
+      }
+    );
+  }
+
+  deleteStepAnalysis(stepId: number, analysisId: number) {
+    return this._fetchJson<void>(
+      'DELETE', 
+      `/users/current/steps/${stepId}/analyses/${analysisId}`
+    );
+  }
+
+  getStepAnalysis(stepId: number, analysisId: number) {
+    return this.sendRequest(
+      stepAnalysisConfigDecoder,
+      {
+        path: `/users/current/steps/${stepId}/analyses/${analysisId}`,
+        method: 'GET'
+      }
+    )
+  }
+
+  updateStepAnalysisForm(stepId: number, analysisId: number, formParams: FormParams) {
+    return this._fetchJson<void>(
+      'PATCH',
+      `/users/current/steps/${stepId}/analyses/${analysisId}`,
+      JSON.stringify({
+        formParams
+      })
+    )
+  }
+
+  renameStepAnalysis(stepId: number, analysisId: number, displayName: string) {
+    return this._fetchJson<void>(
+      'PATCH',
+      `/users/current/steps/${stepId}/analyses/${analysisId}`,
+      JSON.stringify({
+        displayName
+      })
+    );
+  }
+
+  runStepAnalysis(stepId: number, analysisId: number) {
+    return this.sendRequest(
+      Decode.field('status', stepAnalysisStatusDecoder),
+      {
+        path: `/users/current/steps/${stepId}/analyses/${analysisId}/result`,
+        method: 'POST'
+      }
+    );
+  }
+
+  getStepAnalysisResult(stepId: number, analysisId: number) {
+    return this.sendRequest(
+      Decode.ok,
+      {
+        path: `/users/current/steps/${stepId}/analyses/${analysisId}/result`,
+        method: 'GET'
+      }
+    );
+  }
+
+  getStepAnalysisStatus(stepId: number, analysisId: number) {
+    return this.sendRequest(
+      Decode.field('status', stepAnalysisStatusDecoder),
+      {
+        path: `/users/current/steps/${stepId}/analyses/${analysisId}/result/status`,
+        method: 'GET'
+      }
+    );
+  }
+
+  duplicateStepAnalysis(stepId: number, analysisConfig: StepAnalysisConfig) {
+    return this.createStepAnalysis(stepId, analysisConfig);
   }
 
   private _fetchJson<T>(method: string, url: string, body?: string) {
