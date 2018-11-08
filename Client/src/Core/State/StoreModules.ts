@@ -12,6 +12,7 @@ import * as userDatasetDetail from '../../Views/UserDatasets/Detail/UserDatasetD
 import * as userDatasetList from '../../Views/UserDatasets/List/UserDatasetListStoreModule';
 import * as userProfile from '../../Views/User/Profile/UserProfileReducer';
 import * as userRegistration from '../../Views/User/Profile/UserRegistrationModule';
+import * as stepAnalysis from '../MoveAfterRefactor/StoreModules/StepAnalysis/StepAnalysisStoreModule';
 
 export default {
   answerView,
@@ -28,4 +29,5 @@ export default {
   userDatasetList,
   userProfile,
   userRegistration,
+  stepAnalysis
 };
