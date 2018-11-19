@@ -52,7 +52,7 @@ import {
   DuplicateAnalysisAction, 
   HandleClientPluginAction
 } from './StepAnalysisActions';
-import { StepAnalysisType, StepAnalysis } from '../../../../Utils/StepAnalysisUtils';
+import { StepAnalysisType } from '../../../../Utils/StepAnalysisUtils';
 
 export const startLoadingTabListing = (stepId: number): StartLoadingTabListingAction => ({
   type: START_LOADING_TAB_LISTING,

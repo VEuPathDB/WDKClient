@@ -1,4 +1,4 @@
-import { reduce as stepAnalysisReducer } from './StepAnalysisReducer';
+import { reduce as stepAnalysisReducer } from './StepAnalysis/StepAnalysisReducer';
 import { 
   observeStartLoadingTabListing, 
   observeSelectTab, 
@@ -12,10 +12,10 @@ import {
   observeCountDown, 
   observeRenameAnalysis, 
   observeDuplicateAnalysis 
-} from './StepAnalysisObservers';
-import { StepAnalysesState } from './StepAnalysisState';
-import { RootState } from '../../../State/Types';
-import { EpicDependencies } from '../../../Store';
+} from './StepAnalysis/StepAnalysisObservers';
+import { StepAnalysesState } from './StepAnalysis/StepAnalysisState';
+import { RootState } from '../../State/Types';
+import { EpicDependencies } from '../../Store';
 import { Action } from 'redux';
 import { ActionsObservable, StateObservable } from 'redux-observable';
 import { Subject, merge } from 'rxjs';

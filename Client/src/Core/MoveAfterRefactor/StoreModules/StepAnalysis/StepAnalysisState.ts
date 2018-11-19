@@ -6,7 +6,7 @@ export const ANALYSIS_MENU_STATE = 'ANALYSIS_MENU_STATE';
 export const UNSAVED_ANALYSIS_STATE = 'UNSAVED_ANALYSIS_STATE';
 export const SAVED_ANALYSIS_STATE = 'SAVED_ANALYSIS_STATE';
 
-export type StepAnalysesState = {
+export interface StepAnalysesState {
   stepId: number;
   nextPanelId: number;
   analysisPanelStates: Record<number, AnalysisPanelState>;

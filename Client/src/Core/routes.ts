@@ -15,6 +15,7 @@ import UserDatasetListController from '../Views/UserDatasets/List/UserDatasetLis
 import UserDatasetDetailController from '../Views/UserDatasets/Detail/UserDatasetDetailController';
 import FavoritesController from '../Views/Favorites/FavoritesController';
 import QuestionController from '../Views/Question/QuestionController';
+import StepAnalysisController from './MoveAfterRefactor/Containers/StepAnalysis/StepAnalysisContainer';
 
 export default <RouteSpec[]> [
   { path: '/', component: IndexController },
@@ -33,5 +34,6 @@ export default <RouteSpec[]> [
   { path: '/favorites', component: FavoritesController },
   { path: '/data-finder', component: SiteMapController },
   { path: '/question-list', component: QuestionListController },
+  { path: '/step-analysis/:id', component: StepAnalysisController },
   { path: '*', component: NotFoundController },
 ];
