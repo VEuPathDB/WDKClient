@@ -27,7 +27,7 @@ exports.merge = function merge(additionConfig) {
   return function (env) {
     env = env || { development: true };
     var isDevelopment = !env.production;
-    return webpackMerge([{
+    return webpackMerge.smart([{
       bail: true,
       context: process.cwd(),
       resolve: {
@@ -90,15 +90,11 @@ exports.merge = function merge(additionConfig) {
 
           // inlines images as base64
           {
-            test: /\.(gif|png)$/,
+            test: /\.(png|jpg|gif|svg|eot|ttf|woff|woff2)$/,
             loader: 'url-loader',
             options: { limit: 100000 }
           },
 
-          {
-            test: /\.(jpg)$/,
-            loader: 'file-loader'
-          }
         ]
       },
       resolveLoader: {
