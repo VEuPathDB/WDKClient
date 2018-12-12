@@ -14,7 +14,7 @@ import {
 } from './Json';
 import { Parameter as WdkModelParameter } from './WdkModel';
 
-export type StepAnalysisParameter = WdkModelParameter
+export type StepAnalysisParameter = WdkModelParameter;
 
 export interface StepAnalysis {
   analysisId: number,
@@ -36,9 +36,9 @@ export interface FormParams {
 }
 
 export type StepAnalysisStatus = 
-  'CREATED' | 'STEP_REVISED' | 'INVALID' | 'PENDING' | 'RUNNING' | 'COMPLETE' | 'INTERRUPTED' | 'ERROR' | 'EXPIRED' | 'OUT_OF_DATE' | 'UNKNOWN'
+  'CREATED' | 'STEP_REVISED' | 'INVALID' | 'PENDING' | 'RUNNING' | 'COMPLETE' | 'INTERRUPTED' | 'ERROR' | 'EXPIRED' | 'OUT_OF_DATE' | 'UNKNOWN';
 
-export type InvalidStepReason = string | null
+export type InvalidStepReason = string | null;
 
 export interface StepAnalysisConfig {
   analysisId: number,

@@ -1042,7 +1042,7 @@ export default class WdkService {
 
   getStepAnalysisTypeMetadata(stepId: number, analysisTypeName: string) {
     return this.sendRequest(
-      Decode.ok,
+      parametersDecoder,
       {
         path: `/users/current/steps/${stepId}/analysis-types/${analysisTypeName}`,
         method: 'GET'
@@ -1060,7 +1060,7 @@ export default class WdkService {
     );
   }
 
-  createStepAnalysis(stepId: number, analysisConfig: Partial<StepAnalysisConfig>) {
+  createStepAnalysis(stepId: number, analysisConfig: { displayName?: string, analysisName: string }) {
     return this.sendRequest(
       stepAnalysisConfigDecoder,
       {
