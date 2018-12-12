@@ -4,8 +4,6 @@ import {
   SELECT_TAB, 
   START_LOADING_SAVED_TAB, 
   FINISH_LOADING_SAVED_TAB, 
-  START_LOADING_MENU_TAB, 
-  FINISH_LOADING_MENU_TAB, 
   START_LOADING_CHOSEN_ANALYSIS_TAB, 
   FINISH_LOADING_CHOSEN_ANALYSIS_TAB, 
   CREATE_NEW_TAB, 
@@ -17,27 +15,24 @@ import {
   FINISH_FORM_SUBMISSION, 
   RENAME_ANALYSIS, 
   RENAME_TAB, 
-  DUPLICATE_ANALYSIS, 
-  HANDLE_CLIENT_PLUGIN_ACTION, 
+  DUPLICATE_ANALYSIS,
+  UPDATE_PARAM_VALUES,
+  TOGGLE_DESCRIPTION,
+  UPDATE_UI_STATE
 } from './StepAnalysisActionConstants';
 import { 
   UninitializedAnalysisPanelState, 
   SavedAnalysisState, 
   AnalysisMenuState, 
   UnsavedAnalysisState, 
-  AnalysisPanelState, 
-  LoadingMenuState
+  AnalysisPanelState
 } from '../../StoreModules/StepAnalysis/StepAnalysisState';
-import { PluginContext } from '../../../../Utils/ClientPlugin';
-import { Action } from 'redux';
 import { 
   StartLoadingTabListingAction, 
   FinishLoadingTabListingAction, 
   SelectTabAction, 
   StartLoadingSavedTabAction, 
   FinishLoadingSavedTabAction, 
-  FinishLoadingMenuTabAction, 
-  StartLoadingMenuTabAction, 
   StartLoadingChosenAnalysisTabAction, 
   FinishLoadingChosenAnalysisTabAction, 
   CreateNewTabAction, 
@@ -49,8 +44,7 @@ import {
   FinishFormSubmissionAction, 
   RenameAnalysisAction, 
   RenameTabAction, 
-  DuplicateAnalysisAction, 
-  HandleClientPluginAction
+  DuplicateAnalysisAction
 } from './StepAnalysisActions';
 import { StepAnalysisType } from '../../../../Utils/StepAnalysisUtils';
 
@@ -59,9 +53,9 @@ export const startLoadingTabListing = (stepId: number): StartLoadingTabListingAc
   payload: { stepId }
 });
 
-export const finishLoadingTabListing = (tabListing: UninitializedAnalysisPanelState[]): FinishLoadingTabListingAction => ({
+export const finishLoadingTabListing = (tabListing: UninitializedAnalysisPanelState[], analysisChoices: StepAnalysisType[]): FinishLoadingTabListingAction => ({
   type: FINISH_LOADING_TAB_LISTING,
-  payload: { tabListing }
+  payload: { tabListing, analysisChoices }
 });
 
 export const selectTab = (panelId: number): SelectTabAction => ({
@@ -78,16 +72,6 @@ export const finishLoadingSavedTab = (panelId: number, loadedState: Uninitialize
   type: FINISH_LOADING_SAVED_TAB,
   payload: { panelId, loadedState }
 }); 
-
-export const startLoadingMenuTab = (panelId: number): StartLoadingMenuTabAction => ({
-  type: START_LOADING_MENU_TAB,
-  payload: { panelId }
-});
-
-export const finishLoadingMenuTab = (panelId: number, loadedState: LoadingMenuState | AnalysisMenuState): FinishLoadingMenuTabAction => ({
-  type: FINISH_LOADING_MENU_TAB,
-  payload: { panelId, loadedState }
-});
 
 export const startLoadingChosenAnalysisTab = (panelId: number, choice: StepAnalysisType): StartLoadingChosenAnalysisTabAction => ({
   type: START_LOADING_CHOSEN_ANALYSIS_TAB,
@@ -149,7 +133,20 @@ export const duplicateAnalysis = (panelId: number): DuplicateAnalysisAction => (
   payload: { panelId }
 });
 
-export const handleClientPluginAction = (panelId: number, context: PluginContext, pluginAction: Action): HandleClientPluginAction => ({
-  type: HANDLE_CLIENT_PLUGIN_ACTION,
-  payload: { panelId, context, pluginAction }
+export const updateParamValues = (panelId: number, newParamValues: Record<string, string[]>) => ({
+  type: UPDATE_PARAM_VALUES,
+  payload: { panelId, newParamValues }
 });
+
+export const toggleDescription = (panelId: number) => ({
+  type: TOGGLE_DESCRIPTION,
+  payload: { panelId }
+});
+
+const updateUiStateFactory = (uiType: 'formUiState' | 'resultUiState') => (panelId: number, newUiState: Record<string, any>) => ({
+  type: UPDATE_UI_STATE,
+  payload: { panelId, uiType, newUiState }
+});
+
+export const updateFormUiState = updateUiStateFactory('formUiState');
+export const updateResultUiState = updateUiStateFactory('resultUiState');

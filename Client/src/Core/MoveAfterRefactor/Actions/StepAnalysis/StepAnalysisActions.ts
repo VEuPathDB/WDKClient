@@ -4,8 +4,6 @@ import {
   SELECT_TAB, 
   START_LOADING_SAVED_TAB, 
   FINISH_LOADING_SAVED_TAB, 
-  START_LOADING_MENU_TAB, 
-  FINISH_LOADING_MENU_TAB, 
   START_LOADING_CHOSEN_ANALYSIS_TAB, 
   FINISH_LOADING_CHOSEN_ANALYSIS_TAB, 
   CREATE_NEW_TAB, 
@@ -17,29 +15,26 @@ import {
   FINISH_FORM_SUBMISSION, 
   RENAME_ANALYSIS, 
   RENAME_TAB, 
-  DUPLICATE_ANALYSIS, 
-  HANDLE_CLIENT_PLUGIN_ACTION
+  DUPLICATE_ANALYSIS,
+  UPDATE_PARAM_VALUES,
+  TOGGLE_DESCRIPTION,
+  UPDATE_UI_STATE
 } from './StepAnalysisActionConstants';
 import { 
   UninitializedAnalysisPanelState, 
   SavedAnalysisState, 
   AnalysisMenuState, 
   UnsavedAnalysisState, 
-  AnalysisPanelState, 
-  LoadingMenuState 
+  AnalysisPanelState
 } from '../../StoreModules/StepAnalysis/StepAnalysisState';
 import { TypedAction } from '../../../../Utils/ActionCreatorUtils';
-import { PluginContext } from '../../../../Utils/ClientPlugin';
-import { Action } from 'redux';
-import { StepAnalysisType, StepAnalysis } from '../../../../Utils/StepAnalysisUtils';
+import { StepAnalysisType } from '../../../../Utils/StepAnalysisUtils';
 
 export type StartLoadingTabListingAction = TypedAction<typeof START_LOADING_TAB_LISTING, { stepId: number }>
-export type FinishLoadingTabListingAction = TypedAction<typeof FINISH_LOADING_TAB_LISTING, { tabListing: UninitializedAnalysisPanelState[] }>
+export type FinishLoadingTabListingAction = TypedAction<typeof FINISH_LOADING_TAB_LISTING, { tabListing: UninitializedAnalysisPanelState[], analysisChoices: StepAnalysisType[] }>
 export type SelectTabAction = TypedAction<typeof SELECT_TAB, { panelId: number }>
 export type StartLoadingSavedTabAction = TypedAction<typeof START_LOADING_SAVED_TAB, { panelId: number }>
 export type FinishLoadingSavedTabAction = TypedAction<typeof FINISH_LOADING_SAVED_TAB, { panelId: number, loadedState: UninitializedAnalysisPanelState | SavedAnalysisState }>
-export type StartLoadingMenuTabAction = TypedAction<typeof START_LOADING_MENU_TAB, { panelId: number }>
-export type FinishLoadingMenuTabAction = TypedAction<typeof FINISH_LOADING_MENU_TAB, { panelId: number, loadedState: LoadingMenuState | AnalysisMenuState }>
 export type StartLoadingChosenAnalysisTabAction = TypedAction<typeof START_LOADING_CHOSEN_ANALYSIS_TAB, { panelId: number, choice: StepAnalysisType }>
 export type FinishLoadingChosenAnalysisTabAction = TypedAction<typeof FINISH_LOADING_CHOSEN_ANALYSIS_TAB, { panelId: number, loadedState: AnalysisMenuState | UnsavedAnalysisState }>
 export type CreateNewTabAction = TypedAction<typeof CREATE_NEW_TAB, { initialState: AnalysisPanelState }>
@@ -52,15 +47,15 @@ export type FinishFormSubmissionAction = TypedAction<typeof FINISH_FORM_SUBMISSI
 export type RenameAnalysisAction = TypedAction<typeof RENAME_ANALYSIS, { panelId: number, newDisplayName: string }>
 export type RenameTabAction = TypedAction<typeof RENAME_TAB, { panelId: number, newDisplayName: string }>
 export type DuplicateAnalysisAction = TypedAction<typeof DUPLICATE_ANALYSIS, { panelId: number }>
-export type HandleClientPluginAction = TypedAction<typeof HANDLE_CLIENT_PLUGIN_ACTION, { panelId: number, context: PluginContext, pluginAction: Action }>
+export type UpdateParamValues = TypedAction<typeof UPDATE_PARAM_VALUES, { panelId: number, newParamValues: Record<string, string[]> }>;
+export type ToggleDescription = TypedAction<typeof TOGGLE_DESCRIPTION, { panelId: number }>;
+export type UpdateUiState = TypedAction<typeof UPDATE_UI_STATE, { panelId: number, uiType: 'formUiState' | 'resultUiState', newState: Record<string, any> }>;
 
 export type StepAnalysisAction = StartLoadingTabListingAction 
   | FinishLoadingTabListingAction 
   | SelectTabAction
   | StartLoadingSavedTabAction 
   | FinishLoadingSavedTabAction 
-  | StartLoadingMenuTabAction 
-  | FinishLoadingMenuTabAction
   | StartLoadingChosenAnalysisTabAction
   | FinishLoadingChosenAnalysisTabAction
   | CreateNewTabAction
@@ -73,4 +68,6 @@ export type StepAnalysisAction = StartLoadingTabListingAction
   | RenameAnalysisAction
   | RenameTabAction
   | DuplicateAnalysisAction
-  | HandleClientPluginAction
+  | UpdateParamValues
+  | ToggleDescription
+  | UpdateUiState;
