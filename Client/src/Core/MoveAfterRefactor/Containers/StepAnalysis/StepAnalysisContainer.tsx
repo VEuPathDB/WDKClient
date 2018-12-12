@@ -1,61 +1,144 @@
 import React from 'react';
 import { PageController } from "../../../Controllers";
-import { StepAnalysisView } from '../../Components/StepAnalysis/StepAnalysisView';
+import { StepAnalysisView, StepAnalysisEventHandlers } from '../../Components/StepAnalysis/StepAnalysisView';
+import { StepAnalysisType } from '../../../../Utils/StepAnalysisUtils';
+import { memoize } from 'lodash/fp';
+import Tabs, { TabConfig } from '../../../../Components/Tabs/Tabs';
+import { connect } from 'react-redux';
+import { RootState } from '../../../State/Types';
+import { analysisPanelOrder, analysisPanelStates, activeTab, analysisBaseTabConfigs, mapAnalysisPanelStateToProps, webAppUrl, recordClassDisplayName, wdkModelBuildNumber, analysisChoices } from '../../StoreModules/StepAnalysis/StepAnalysisSelectors';
+import { Dispatch } from 'redux';
+import { startLoadingChosenAnalysisTab, startLoadingTabListing, deleteAnalysis, selectTab, createNewTab, startFormSubmission, updateParamValues, renameAnalysis, duplicateAnalysis, toggleDescription, updateFormUiState, updateResultUiState } from '../../Actions/StepAnalysis/StepAnalysisActionCreators';
+import { PageControllerProps } from '../../../CommonTypes';
 
-class StepAnalysisController extends PageController {
+type StateProps = {
+  webAppUrl: ReturnType<typeof webAppUrl>;
+  wdkModelBuildNumber: ReturnType<typeof wdkModelBuildNumber>;
+  recordClassDisplayName: ReturnType<typeof recordClassDisplayName>;
+  analysisChoices: ReturnType<typeof analysisChoices>;
+  analysisBaseTabConfigs: ReturnType<typeof analysisBaseTabConfigs>;
+  analysisPanelOrder: ReturnType<typeof analysisPanelOrder>, 
+  analysisPanelStates: ReturnType<typeof analysisPanelStates>, 
+  activeTab: ReturnType<typeof activeTab>;
+};
+
+interface TabEventHandlers {
+  loadTabs: (stepId: number) => void;
+  onTabSelected: (tabKey: string) => void;
+  onTabRemoved: (tabKey: string) => void;
+}
+
+type PanelEventHandlers = {
+  [K in keyof StepAnalysisEventHandlers]: (panelId: number) => StepAnalysisEventHandlers[K];
+};
+
+interface StepAnalysisContainerProps {
+  loadingTabs: boolean;
+  activeTab: string;
+  tabs: TabConfig[];
+  onTabSelected: (tabKey: string) => void;
+  onTabRemoved: (tabKey: string) => void;
+  loadTabs: (stepId: number) => void;
+}
+
+class StepAnalysisController extends PageController<StepAnalysisContainerProps> {
+  loadData() {
+    this.props.loadTabs(
+      this.props.match.params.stepId
+    );
+  }
+
+  isRenderDataLoaded() {
+    return !this.props.loadingTabs;
+  }
+
   renderView() {
     return (
-      <StepAnalysisView
-        type="analysis-menu"
-        childProps={{
-          recordClassDisplayName: "Gene",
-          wdkModelBuildNumber: 41,
-          choices: choicesFixture,
-          webAppUrl: "http://plasmodb.vm.ebrc.org/plasmo.vm",
-          selectedType: "go-enrichment",
-          loadChoice: choice => console.log(`Tab ${choice.name} selected`)
-        }}
+      <Tabs
+        activeTab={`${this.props.activeTab}`}
+        onTabSelected={this.props.onTabSelected}
+        onTabRemoved={this.props.onTabRemoved}
+        tabs={this.props.tabs}
       />
     );
   }
 }
 
-export default StepAnalysisController;
+const mapStateToProps = (state: RootState): StateProps => ({ 
+  webAppUrl: webAppUrl(state),
+  recordClassDisplayName: recordClassDisplayName(state),
+  wdkModelBuildNumber: wdkModelBuildNumber(state),
+  analysisChoices: analysisChoices(state),
+  analysisPanelOrder: analysisPanelOrder(state), 
+  analysisPanelStates: analysisPanelStates(state),
+  analysisBaseTabConfigs: analysisBaseTabConfigs(state),
+  activeTab: activeTab(state)
+});
 
-const choicesFixture = [
-  {
-     "hasParameters":true,
-     "displayName":"Experiments with Similar Results",
-     "releaseVersion":"32",
-     "name":"datasetGeneList",
-     "description":"<p>Find Experiments which have a gene list that is similar to your result set. Gene lists could be generated in many ways including publications, automated differential expression (current list) or manual curation.</p>",
-     "shortDescription":"Find Experiments that have a gene list that is similar to your result set."
-  },
-  {
-     "hasParameters":true,
-     "displayName":"Gene Ontology Enrichment",
-     "releaseVersion":"22",
-     "name":"go-enrichment",
-     "description":"<p>The Gene Ontology (GO) is a public resource that develops organism \n            independent ontologies (structured controlled vocabularies) that describe \n            a gene&rsquo;s molecular function, cellular component or biological processes. \n            GO Terms are associated with genes as a form of annotation. \n            This tool looks for enriched GO terms &#8212; GO terms that appear in the genes of \n            your search result (subset) more frequently than they do in the set of all genes \n            for that organism (background).\n           </p>\n           <p>For statistical reasons, this analysis can only be performed on a set of genes \n             from a single organism. If your gene result contains genes from several organisms, \n             use the Filter Table to limit your gene result. Then choose an Ontology, a GO Association \n             Source, and a P-Value Cutoff and click Submit.\n           </p>\n           <p> By selecting GOSlim_generic_only for the GO subset parameter the background dataset\n             and the gene list will be limited to GO terms from the GO Slim generic subset. \n           </p>\n           <p>Hover over the help icon <div class=\"HelpTrigger\"><i class=\"fa fa-question-circle\"></i></div>\n             next to each parameter for more information about that parameter.\n           </p>",
-     "customThumbnail":"wdkCustomization/images/go-analysis-logo.png",
-     "shortDescription":"Find Gene Ontology terms that are enriched in your gene result."
-  },
-  {
-     "hasParameters":true,
-     "displayName":"Metabolic Pathway Enrichment",
-     "releaseVersion":"22",
-     "name":"pathway-enrichment",
-     "description":"",
-     "customThumbnail":"wdkCustomization/images/pathway-analysis-logo2.png",
-     "shortDescription":"Find Metabolic Pathways that are enriched in your Genes result."
-  },
-  {
-     "hasParameters":true,
-     "displayName":"Word Enrichment",
-     "releaseVersion":"22",
-     "name":"word-enrichment",
-     "description":"",
-     "customThumbnail":"wdkCustomization/images/word-analysis-logo.png",
-     "shortDescription":"Find words (from the product description)  that are enriched in your Genes result."
-  }
-];
+const mapDispatchToProps = (dispatch: Dispatch): TabEventHandlers & PanelEventHandlers => ({
+  loadTabs: (stepId: number) => dispatch(startLoadingTabListing(stepId)),
+  onTabSelected: (tabKey: string) => tabKey !== 'new-analysis'
+    ? dispatch(selectTab(+tabKey))
+    : dispatch(
+        createNewTab(
+          {
+            type: 'ANALYSIS_MENU_STATE',
+            displayName: 'New Analysis',
+            status: 'AWAITING_USER_CHOICE',
+            errorMessage: null
+          }
+        )
+      ),
+  onTabRemoved: (tabKey: string) => dispatch(deleteAnalysis(+tabKey)),
+  toggleDescription: memoize((panelId: number) => () => dispatch(toggleDescription(panelId))),
+  loadChoice: memoize((panelId: number) => (choice: StepAnalysisType) => dispatch(startLoadingChosenAnalysisTab(panelId, choice))),
+  updateParamValues: memoize((panelId: number) => (newParamValues: Record<string, string[]>) => dispatch(updateParamValues(panelId, newParamValues))),
+  updateFormUiState: memoize((panelId: number) => (newUiState: Record<string, any>) => dispatch(updateFormUiState(panelId, newUiState))),
+  onFormSubmit: memoize((panelId: number) => () => dispatch(startFormSubmission(panelId))),
+  updateResultsUiState: memoize((panelId: number) => (newUiState: Record<string, any>) => dispatch(updateResultUiState(panelId, newUiState))),
+  renameAnalysis: memoize((panelId: number) => (newDisplayName: string) => dispatch(renameAnalysis(panelId, newDisplayName))),
+  duplicateAnalysis: memoize((panelId: number) => () => dispatch(duplicateAnalysis(panelId)))
+});
+
+const mergeProps = (
+  stateProps: StateProps, eventHandlers: TabEventHandlers & PanelEventHandlers, ownProps: PageControllerProps 
+): StepAnalysisContainerProps & PageControllerProps => ({
+  ...ownProps,
+  loadingTabs: stateProps.analysisPanelOrder.length === 0,
+  activeTab: `${stateProps.activeTab}`,
+  onTabSelected: eventHandlers.onTabSelected,
+  onTabRemoved: eventHandlers.onTabRemoved,
+  loadTabs: eventHandlers.loadTabs,
+  tabs: stateProps.analysisBaseTabConfigs.map(
+    baseTabConfig => ({ 
+      ...baseTabConfig, 
+      content: stateProps.activeTab === +baseTabConfig.key
+        ? <StepAnalysisView 
+            {
+              ...mapAnalysisPanelStateToProps(
+                stateProps.analysisPanelStates[+baseTabConfig.key],
+                stateProps.analysisChoices,
+                stateProps.webAppUrl,
+                stateProps.wdkModelBuildNumber,
+                stateProps.recordClassDisplayName
+              )
+            } 
+            loadChoice={eventHandlers.loadChoice(+baseTabConfig.key)}
+            toggleDescription={eventHandlers.toggleDescription(+baseTabConfig.key)}
+            updateParamValues={eventHandlers.updateParamValues(+baseTabConfig.key)}
+            updateFormUiState={eventHandlers.updateFormUiState(+baseTabConfig.key)}
+            onFormSubmit={eventHandlers.onFormSubmit(+baseTabConfig.key)}
+            updateResultsUiState={eventHandlers.updateResultsUiState(+baseTabConfig.key)}
+            renameAnalysis={eventHandlers.renameAnalysis(+baseTabConfig.key)}
+            duplicateAnalysis={eventHandlers.duplicateAnalysis(+baseTabConfig.key)}
+          />
+        : <div></div>
+     })
+  )
+})
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps,
+  mergeProps
+)(StepAnalysisController);
