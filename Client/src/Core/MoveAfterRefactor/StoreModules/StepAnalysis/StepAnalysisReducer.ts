@@ -1,13 +1,11 @@
 import { 
   UNINITIALIZED_PANEL_STATE, 
-  LOADING_MENU_STATE, 
   ANALYSIS_MENU_STATE, 
   UNSAVED_ANALYSIS_STATE, 
   SAVED_ANALYSIS_STATE,
   AnalysisPanelState, 
   StepAnalysesState,
   UninitializedAnalysisPanelState,
-  LoadingMenuState,
   AnalysisMenuState,
   UnsavedAnalysisState,
   SavedAnalysisState
@@ -17,9 +15,7 @@ import {
   FINISH_LOADING_TAB_LISTING, 
   SELECT_TAB, 
   START_LOADING_SAVED_TAB, 
-  FINISH_LOADING_SAVED_TAB, 
-  START_LOADING_MENU_TAB, 
-  FINISH_LOADING_MENU_TAB, 
+  FINISH_LOADING_SAVED_TAB,
   START_LOADING_CHOSEN_ANALYSIS_TAB, 
   FINISH_LOADING_CHOSEN_ANALYSIS_TAB, 
   CREATE_NEW_TAB, 
@@ -31,13 +27,18 @@ import {
   FINISH_FORM_SUBMISSION, 
   RENAME_ANALYSIS, 
   RENAME_TAB, 
-  DUPLICATE_ANALYSIS, 
-  HANDLE_CLIENT_PLUGIN_ACTION 
+  DUPLICATE_ANALYSIS,
+  UPDATE_PARAM_VALUES,
+  TOGGLE_DESCRIPTION,
+  UPDATE_UI_STATE
 } from '../../Actions/StepAnalysis/StepAnalysisActionConstants';
 import { StepAnalysisAction } from '../../Actions/StepAnalysis/StepAnalysisActions';
 import { LocatePlugin } from '../../../CommonTypes';
+import { equals } from 'lodash/fp';
 
 const initialState: StepAnalysesState = {
+  activeTab: -1,
+  analysisChoices: [],
   stepId: -1,
   nextPanelId: 0,
   analysisPanelStates: {},
@@ -56,12 +57,18 @@ export function reduce(state: StepAnalysesState = initialState, action: StepAnal
     case FINISH_LOADING_TAB_LISTING: {
       return action.payload.tabListing.reduce(
         insertPanelState,
-        state
+        {
+          ...state,
+          analysisChoices: action.payload.analysisChoices
+        }
       );
     }
 
     case SELECT_TAB: {
-      return state;
+      return {
+        ...state,
+        activeTab: action.payload.panelId
+      };
     }
 
     case START_LOADING_SAVED_TAB: {
@@ -73,7 +80,6 @@ export function reduce(state: StepAnalysesState = initialState, action: StepAnal
             ...panelState,
             status: 'LOADING_SAVED_ANALYSIS'
           }),
-          LoadingMenuState: identity,
           AnalysisMenuState: identity,
           UnsavedAnalysisState: identity,
           SavedAnalysisState: identity
@@ -87,30 +93,11 @@ export function reduce(state: StepAnalysesState = initialState, action: StepAnal
         action.payload.panelId,
         {
           UninitializedPanelState: _ => action.payload.loadedState,
-          LoadingMenuState: identity,
           AnalysisMenuState: identity,
           UnsavedAnalysisState: identity,
           SavedAnalysisState: identity
         }
       )
-    }
-
-    case START_LOADING_MENU_TAB: {
-      return state;
-    }
-
-    case FINISH_LOADING_MENU_TAB: {
-      return updatePanelState(
-        state,
-        action.payload.panelId,
-        {
-          UninitializedPanelState: identity,
-          LoadingMenuState: _ => action.payload.loadedState,
-          AnalysisMenuState: identity,
-          UnsavedAnalysisState: identity,
-          SavedAnalysisState: identity
-        }
-      );
     }
 
     case START_LOADING_CHOSEN_ANALYSIS_TAB: {
@@ -119,9 +106,9 @@ export function reduce(state: StepAnalysesState = initialState, action: StepAnal
         action.payload.panelId,
         {
           UninitializedPanelState: identity,
-          LoadingMenuState: identity,
           AnalysisMenuState: panelState => ({
             ...panelState,
+            selectedAnalysis: action.payload.choice,
             status: 'CREATING_UNSAVED_ANALYSIS'
           }),
           UnsavedAnalysisState: identity,
@@ -136,7 +123,6 @@ export function reduce(state: StepAnalysesState = initialState, action: StepAnal
         action.payload.panelId,
         {
           UninitializedPanelState: identity,
-          LoadingMenuState: identity,
           AnalysisMenuState: _ => action.payload.loadedState,
           UnsavedAnalysisState: identity,
           SavedAnalysisState: identity
@@ -145,7 +131,14 @@ export function reduce(state: StepAnalysesState = initialState, action: StepAnal
     }
 
     case CREATE_NEW_TAB: {
-      return insertPanelState(state, action.payload.initialState);
+      const insertedTabState = insertPanelState(state, action.payload.initialState);
+      
+      return {
+        ...insertedTabState,
+        activeTab: insertedTabState.analysisPanelOrder[
+          insertedTabState.analysisPanelOrder.length - 1
+        ]
+      };
     }
 
     case DELETE_ANALYSIS: {
@@ -153,7 +146,21 @@ export function reduce(state: StepAnalysesState = initialState, action: StepAnal
     }
 
     case REMOVE_TAB: {
-      return removePanelState(state, action.payload.panelId);
+      const tabIndex = state.analysisPanelOrder.find(equals(action.payload.panelId));
+      
+      if (tabIndex === undefined) {
+        return state;
+      }
+      
+      const removedTabState = removePanelState(state, action.payload.panelId);
+      const newActiveTab = removedTabState.activeTab === action.payload.panelId
+        ? (removedTabState.analysisPanelOrder[tabIndex] || 0)
+        : removedTabState.activeTab;
+
+      return {
+        ...removedTabState,
+        activeTab: newActiveTab
+      };
     }
 
     case START_FORM_SUBMISSION: {
@@ -162,7 +169,6 @@ export function reduce(state: StepAnalysesState = initialState, action: StepAnal
         action.payload.panelId,
         {
           UninitializedPanelState: identity,
-          LoadingMenuState: identity,
           AnalysisMenuState: identity,
           UnsavedAnalysisState: panelState => ({
             ...panelState,
@@ -189,7 +195,6 @@ export function reduce(state: StepAnalysesState = initialState, action: StepAnal
         action.payload.panelId,
         {
           UninitializedPanelState: identity,
-          LoadingMenuState: identity,
           AnalysisMenuState: identity,
           UnsavedAnalysisState: panelState => ({
             ...panelState,
@@ -213,7 +218,6 @@ export function reduce(state: StepAnalysesState = initialState, action: StepAnal
         action.payload.panelId,
         {
           UninitializedPanelState: identity,
-          LoadingMenuState: identity,
           AnalysisMenuState: identity,
           UnsavedAnalysisState: identity,
           SavedAnalysisState: _ => action.payload.loadedState
@@ -231,16 +235,12 @@ export function reduce(state: StepAnalysesState = initialState, action: StepAnal
         action.payload.panelId,
         {
           UninitializedPanelState: identity,
-          LoadingMenuState: identity,
           AnalysisMenuState: identity,
           UnsavedAnalysisState: panelState => ({
             ...panelState,
             displayName: action.payload.newDisplayName
           }),
-          SavedAnalysisState: panelState => ({
-            ...panelState,
-            displayName: action.payload.newDisplayName
-          })
+          SavedAnalysisState: identity
         }
       )
     }
@@ -249,21 +249,74 @@ export function reduce(state: StepAnalysesState = initialState, action: StepAnal
       return state;
     }
 
-    case HANDLE_CLIENT_PLUGIN_ACTION: {
+    case UPDATE_PARAM_VALUES: {
       return updatePanelState(
         state,
         action.payload.panelId,
         {
           UninitializedPanelState: identity,
-          LoadingMenuState: identity,
           AnalysisMenuState: identity,
-          UnsavedAnalysisState: identity,
-          SavedAnalysisState: panelState => 
-            locatePlugin<SavedAnalysisState>('stepAnalysis').reduce(
-              action.payload.context,
-              panelState,
-              action.payload.pluginAction
-            )
+          UnsavedAnalysisState: panelState => ({
+            ...panelState,
+            paramValues: action.payload.newParamValues
+          }),
+          SavedAnalysisState: panelState => ({
+            ...panelState,
+            paramValues: action.payload.newParamValues
+          })
+        }
+      );
+    }
+
+    case TOGGLE_DESCRIPTION: {
+      return updatePanelState(
+        state,
+        action.payload.panelId,
+        {
+          UninitializedPanelState: identity,
+          AnalysisMenuState: identity,
+          UnsavedAnalysisState: panelState => ({
+            ...panelState,
+            descriptionUiState: {
+              ...panelState.descriptionUiState,
+              descriptionExpanded: !panelState.descriptionUiState.descriptionExpanded
+            }
+          }),
+          SavedAnalysisState: panelState => ({
+            ...panelState,
+            descriptionUiState: {
+              ...panelState.descriptionUiState,
+              descriptionExpanded: !panelState.descriptionUiState.descriptionExpanded
+            }
+          })
+        }
+      );
+    }
+
+    case UPDATE_UI_STATE: {
+      return updatePanelState(
+        state,
+        action.payload.panelId,
+        {
+          UninitializedPanelState: identity,
+          AnalysisMenuState: identity,
+          UnsavedAnalysisState: panelState => 
+            action.payload.uiType !== 'formUiState'
+              ? panelState
+              : ({
+                ...panelState,
+                [action.payload.uiType]: {
+                  ...panelState[action.payload.uiType],
+                  ...action.payload.newState
+                }
+              }),
+          SavedAnalysisState: panelState => ({
+            ...panelState,
+            [action.payload.uiType]: {
+              ...panelState[action.payload.uiType],
+              ...action.payload.newState
+            }
+          })
         }
       )
     }
@@ -274,20 +327,17 @@ export function reduce(state: StepAnalysesState = initialState, action: StepAnal
   }
 }
 
-type AnalysisPanelStatePattern<R = AnalysisPanelState, S = AnalysisPanelState, T = AnalysisPanelState, U = AnalysisPanelState, V = AnalysisPanelState> = {
+export type AnalysisPanelStatePattern<R = AnalysisPanelState, S = AnalysisPanelState, T = AnalysisPanelState, U = AnalysisPanelState> = {
   UninitializedPanelState: (_: UninitializedAnalysisPanelState) => R;
-  LoadingMenuState: (_: LoadingMenuState) => S;
-  AnalysisMenuState: (_: AnalysisMenuState) => T;
-  UnsavedAnalysisState: (_: UnsavedAnalysisState) => U;
-  SavedAnalysisState: (_: SavedAnalysisState) => V;
+  AnalysisMenuState: (_: AnalysisMenuState) => S;
+  UnsavedAnalysisState: (_: UnsavedAnalysisState) => T;
+  SavedAnalysisState: (_: SavedAnalysisState) => U;
 };
 
-const transformPanelState = <R, S, T, U, V>(panelState: AnalysisPanelState, matcher: AnalysisPanelStatePattern<R, S, T, U, V>): R | S | T | U | V => {
+export const transformPanelState = <R, S, T, U>(panelState: AnalysisPanelState, matcher: AnalysisPanelStatePattern<R, S, T, U>): R | S | T | U => {
   switch(panelState.type) {
     case UNINITIALIZED_PANEL_STATE:
       return matcher.UninitializedPanelState(panelState);
-    case LOADING_MENU_STATE:
-      return matcher.LoadingMenuState(panelState);
     case ANALYSIS_MENU_STATE:
       return matcher.AnalysisMenuState(panelState);
     case UNSAVED_ANALYSIS_STATE:
