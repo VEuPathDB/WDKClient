@@ -34,6 +34,6 @@ export default <RouteSpec[]> [
   { path: '/favorites', component: FavoritesController },
   { path: '/data-finder', component: SiteMapController },
   { path: '/question-list', component: QuestionListController },
-  { path: '/step-analysis/:id', component: StepAnalysisController },
+  { path: '/step-analysis/:stepId', component: StepAnalysisController },
   { path: '*', component: NotFoundController },
 ];
