@@ -1,6 +1,7 @@
 import React from 'react';
 import { StepAnalysisType } from '../../../../Utils/StepAnalysisUtils';
 import { StepAnalysisTile } from './StepAnalysisTile';
+import { StepAnalysisEventHandlers } from './StepAnalysisView';
 
 export interface StepAnalysisMenuPaneProps {
   recordClassDisplayName: string;
@@ -8,10 +9,9 @@ export interface StepAnalysisMenuPaneProps {
   webAppUrl: string;
   choices: StepAnalysisType[];
   selectedType?: string;
-  loadChoice: (choice: StepAnalysisType) => void;
 }
 
-export const StepAnalysisMenuPane: React.SFC<StepAnalysisMenuPaneProps> = ({
+export const StepAnalysisMenuPane: React.SFC<StepAnalysisMenuPaneProps & StepAnalysisEventHandlers> = ({
   recordClassDisplayName,
   wdkModelBuildNumber,
   webAppUrl,

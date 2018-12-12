@@ -1,40 +1,54 @@
 import React, { Fragment } from 'react';
-import { StepAnalysisParameter } from '../../../../Utils/StepAnalysisUtils';
 import { StepAnalysisErrorsPane } from './StepAnalysisErrorsPane';
+import { StepAnalysisLinks } from './StepAnalysisLinks';
+import { StepAnalysisDescription } from './StepAnalysisDescription';
+import { StepAnalysisFormPane, StepAnalysisFormPluginState, StepAnalysisFormPluginProps } from './StepAnalysisFormPane';
+import { StepAnalysisResultsPane, StepAnalysisResultState, StepAnalysisResultPluginProps } from './StepAnalysisResultsPane';
+import { StepAnalysisParameter, StepAnalysisConfig } from '../../../../Utils/StepAnalysisUtils';
+import { StepAnalysisEventHandlers } from './StepAnalysisView';
 
-const StepAnalysisLinks: React.SFC<any> = _ => null;
-const StepAnalysisDescription: React.SFC<any> = _ => null;
-const StepAnalysisFormPane: React.SFC<any> = _ => null;
-const StepAnalysisResultsPane: React.SFC<any> = _ => null;
+export type StepAnalysisSelectedPaneProps = StepAnalysisSelectedPaneStateProps & StepAnalysisEventHandlers;
 
-export interface StepAnalysisSelectedPaneProps {
-  displayName: string;
+export interface StepAnalysisSelectedPaneStateProps {
+  analysisName: string;
+  descriptionState: DescriptionState;
+  formState: StepAnalysisFormMetadata & StepAnalysisFormPluginState;
+  resultState?: StepAnalysisResultState;
+  pluginRenderers: PluginRenderers;
+}
+
+interface DescriptionState {
   shortDescription: string;
   description: string;
-  errors: string[];
-  paramSpecs: StepAnalysisParameter[];
-  paramValues: Record<string, string[]>;
+  descriptionExpanded: boolean;
+}
+
+interface StepAnalysisFormMetadata {
   hasParameters: boolean;
-  analysisResults: any;
-  updateParamValues: (newParamValues: Record<string, string[]>) => void;
-  onFormSubmit: () => void;
-  renameAnalysis: (newDisplayName: string) => void;
-  duplicateAnalysis: () => void;
+  errors: string[];
+}
+
+interface PluginRenderers {
+  formRenderer: (props: StepAnalysisFormPluginProps) => React.ReactNode;
+  resultRenderer: (props: StepAnalysisResultPluginProps) => React.ReactNode;
 }
 
 export const StepAnalysisSelectedPane: React.SFC<StepAnalysisSelectedPaneProps> = ({
-  displayName,
-  shortDescription,
-  description,
-  errors,
-  paramSpecs,
-  paramValues,
-  hasParameters,
-  analysisResults,
+  analysisName,
+  descriptionState,
+  formState,
+  resultState,
+  toggleDescription,
   updateParamValues,
+  updateFormUiState,
+  updateResultsUiState,
   onFormSubmit,
   renameAnalysis,
   duplicateAnalysis,
+  pluginRenderers: {
+    formRenderer,
+    resultRenderer
+  }
 }) => (
   <div className="step-analysis-pane">
     <div className="ui-helper-clearfix">
@@ -42,31 +56,28 @@ export const StepAnalysisSelectedPane: React.SFC<StepAnalysisSelectedPaneProps> 
         renameAnalysis={renameAnalysis} 
         duplicateAnalysis={duplicateAnalysis} 
       />
-      <h2 id="step-analysis-title">{displayName}</h2>
+      <h2 id="step-analysis-title">{analysisName}</h2>
       <StepAnalysisDescription 
-        shortDescription={shortDescription} 
-        description={description} 
+        {...descriptionState} 
+        toggleDescription={toggleDescription} 
       />
     </div>
     <div className="step-analysis-subpane">
-      <StepAnalysisErrorsPane errors={errors} />
-      <StepAnalysisFormPane 
-        paramSpecs={paramSpecs} 
-        paramValues={paramValues}
+      <StepAnalysisFormPane
+        {...formState}
+        formRenderer={formRenderer}
         updateParamValues={updateParamValues}
-        onSubmit={onFormSubmit}
+        updateFormUiState={updateFormUiState}
+        onFormSubmit={onFormSubmit}
       />
       {
-        hasParameters && (
-          <Fragment>
-            <div style={{ textAlign: "center", fontStyle: "italic" }}>
-              The analysis results will be shown below.
-            </div>
-            <hr/>
-          </Fragment>
-        )
+        resultState &&
+          <StepAnalysisResultsPane
+          {...resultState}
+          resultRenderer={resultRenderer}
+          updateResultsUiState={updateResultsUiState}
+        />
       }
-      <StepAnalysisResultsPane analysisResults={analysisResults} />
     </div>
   </div>
 );

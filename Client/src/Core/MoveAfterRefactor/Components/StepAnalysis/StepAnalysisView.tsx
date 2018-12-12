@@ -1,29 +1,39 @@
 import React, { Fragment } from 'react';
 import { StepAnalysisMenuPaneProps, StepAnalysisMenuPane } from './StepAnalysisMenuPane';
-import { StepAnalysisSelectedPaneProps, StepAnalysisSelectedPane } from './StepAnalysisSelectedPane';
+import { StepAnalysisSelectedPaneProps, StepAnalysisSelectedPane, StepAnalysisSelectedPaneStateProps } from './StepAnalysisSelectedPane';
 import { Loading } from '../../../../Components';
+import { StepAnalysisType } from '../../../../Utils/StepAnalysisUtils';
 
-type StepAnalysisViewProps = StepAnalysisUnopenedPaneTypedProps | StepAnalysisLoadingMenuPaneTypedProps | StepAnalysisMenuPaneTypedProps | StepAnalysisSelectedPaneTypedProps;
+export type StepAnalysisStateProps = StepAnalysisUnopenedPaneTypedProps | StepAnalysisLoadingMenuPaneTypedProps | StepAnalysisMenuPaneTypedProps | StepAnalysisSelectedPaneTypedProps;
 
-interface StepAnalysisUnopenedPaneTypedProps {
+export interface StepAnalysisUnopenedPaneTypedProps {
   type: 'unopened-pane';
 }
 
-interface StepAnalysisLoadingMenuPaneTypedProps {
+export interface StepAnalysisLoadingMenuPaneTypedProps {
   type: 'loading-menu-pane';
 }
 
-interface StepAnalysisMenuPaneTypedProps {
+export type StepAnalysisMenuPaneTypedProps = {
   type: 'analysis-menu'; 
-  childProps: StepAnalysisMenuPaneProps;
-}
+} & StepAnalysisMenuPaneProps;
 
-interface StepAnalysisSelectedPaneTypedProps {
+export type StepAnalysisSelectedPaneTypedProps = {
   type: 'selected-analysis';
-  childProps: StepAnalysisSelectedPaneProps;
+} & StepAnalysisSelectedPaneStateProps;
+
+export interface StepAnalysisEventHandlers {
+  loadChoice: (choice: StepAnalysisType) => void;
+  toggleDescription: () => void;
+  updateParamValues: (newParamValues: Record<string, string[]>) => void;
+  updateFormUiState: (newFormState: any) => void;
+  updateResultsUiState: (newResultsState: any) => void;
+  onFormSubmit: () => void;
+  renameAnalysis: (newDisplayName: string) => void;
+  duplicateAnalysis: () => void;
 }
 
-export const StepAnalysisView: React.SFC<StepAnalysisViewProps> = props => (
+export const StepAnalysisView: React.SFC<StepAnalysisStateProps & StepAnalysisEventHandlers> = props => (
   <Fragment>
     {
       props.type === 'unopened-pane' &&
@@ -35,7 +45,7 @@ export const StepAnalysisView: React.SFC<StepAnalysisViewProps> = props => (
         <div className="analysis-menu-tab-pane">
           <Loading>
             <div>
-              Loading analysis choices...
+              Loading analysis...
             </div>
           </Loading>
         </div>
@@ -43,11 +53,11 @@ export const StepAnalysisView: React.SFC<StepAnalysisViewProps> = props => (
     }
     {
       props.type === 'analysis-menu' &&
-      <StepAnalysisMenuPane { ...props.childProps } />
+      <StepAnalysisMenuPane { ...props } />
     }
     {
       props.type === 'selected-analysis' &&
-      <StepAnalysisSelectedPane { ...props.childProps } />
+      <StepAnalysisSelectedPane { ...props } />
     }
   </Fragment>
 );
