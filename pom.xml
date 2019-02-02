@@ -5,7 +5,7 @@
   <name>WDK Client</name>
   <url>https://code.google.com/p/strategies-wdk</url>
   <groupId>org.gusdb</groupId>
-  <artifactId>wdkclient</artifactId>
+  <artifactId>wdk-client</artifactId>
   <version>1.0.0</version>
   <packaging>pom</packaging>
 
