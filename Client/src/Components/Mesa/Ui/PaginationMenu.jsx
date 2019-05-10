@@ -22,24 +22,24 @@ class PaginationMenu extends React.PureComponent {
 
   renderEllipsis (key = '') {
     return (
-      <a key={'ellipsis-' + key} className="ellipsis">
+      <div key={'ellipsis-' + key} className="ellipsis">
         ...
-      </a>
+      </div>
     );
   }
 
   renderPageLink (page, current) {
     let handler = () => this.goToPage(page);
     return (
-      <a onClick={handler} key={page} className={current === page ? 'active' : 'inactive'}>
-        {page}
-      </a>
+      <button type="button" onClick={handler} key={page} className={current === page ? 'active' : 'inactive'}>
+        {page.toLocaleString()}
+      </button>
     );
   }
 
   getTotalPages() {
-    const { rowsPerPage, totalRows } = this.props;
-    return Math.ceil(totalRows / rowsPerPage);
+    const { rowsPerPage, totalPages, totalRows } = this.props;
+    return totalPages || Math.ceil(totalRows / rowsPerPage);
   }
 
   getRelativePageNumber (relative) {
@@ -91,9 +91,9 @@ class PaginationMenu extends React.PureComponent {
 
     return (!page || !icon) ? null : (
       <span className="Pagination-Nav">
-        <a onClick={() => this.goToPage(page)} title={'Jump to the ' + relative + ' page'}>
+        <button type="button" onClick={() => this.goToPage(page)} title={'Jump to the ' + relative + ' page'}>
           <Icon fa={icon} />
-        </a>
+        </button>
       </span>
     )
   }
@@ -149,14 +149,16 @@ class PaginationMenu extends React.PureComponent {
     const PerPageMenu = this.renderPerPageMenu;
     const RelativeLink = this.renderRelativeLink;
 
-    if (!totalPages || !currentPage || totalRows <= rowsPerPage) return null;
+    if (!totalPages || !currentPage) return null;
+
+    const showPageList = totalRows > rowsPerPage;
 
     return (
       <div className="PaginationMenu">
         <span className="Pagination-Spacer" />
-        <RelativeLink relative="previous" />
-        <PageList />
-        <RelativeLink relative="next" />
+        {showPageList && <RelativeLink relative="previous" />}
+        {showPageList && <PageList />}
+        {showPageList && <RelativeLink relative="next" />}
         <PerPageMenu />
       </div>
     );
@@ -165,6 +167,7 @@ class PaginationMenu extends React.PureComponent {
 
 PaginationMenu.propTypes = {
   totalRows: PropTypes.number,
+  totalPages: PropTypes.number,
   currentPage: PropTypes.number,
   rowsPerPage: PropTypes.number,
   onPageChange: PropTypes.func,

@@ -1,60 +1,128 @@
-import { requestGenomeSummaryReport, fulfillGenomeSummaryReport} from 'wdk-client/Actions/SummaryView/GenomeSummaryViewActions';
-
+import { get } from 'lodash/fp';
+import { combineEpics, StateObservable } from 'redux-observable';
 import { Action } from 'wdk-client/Actions';
-import { getStepBundlePromise } from 'wdk-client/Utils/stepUtils';
-import WdkService from 'wdk-client/Utils/WdkService';
-import { GenomeSummaryViewReport } from 'wdk-client/Utils/WdkModel';
+import {
+  applyEmptyChromosomesFilter,
+  fulfillGenomeSummaryReport,
+  hideRegionDialog,
+  requestGenomeSummaryReport,
+  showRegionDialog,
+  unapplyEmptyChromosomesFilter
+} from 'wdk-client/Actions/SummaryView/GenomeSummaryViewActions';
+import { RootState } from 'wdk-client/Core/State/Types';
 import { EpicDependencies } from 'wdk-client/Core/Store';
-import { InferAction } from 'wdk-client/Utils/ActionCreatorUtils';
-import { mergeMapRequestActionsToEpic } from 'wdk-client/Utils/ActionCreatorUtils';
-import { combineEpics} from 'redux-observable';
-
-import { Observable } from 'rxjs';
+import {
+  InferAction,
+  mergeMapRequestActionsToEpic
+} from 'wdk-client/Utils/ActionCreatorUtils';
+import { indexByActionProperty, IndexedState } from 'wdk-client/Utils/ReducerUtils';
+import { getStepBundlePromise } from 'wdk-client/Utils/stepUtils';
+import {
+  GenomeSummaryViewReport,
+  RecordClass
+} from 'wdk-client/Utils/WdkModel';
+import WdkService from 'wdk-client/Utils/WdkService';
 
 export const key = 'genomeSummaryView';
+export type State = IndexedState<ViewState>;
+export const reduce = indexByActionProperty(reduceView, get(['payload', 'viewId']));
 
-export type State = {
-    genomeSummaryData?: GenomeSummaryViewReport,
+type ViewState = {
+  genomeSummaryData?: GenomeSummaryViewReport;
+  recordClass?: RecordClass;
+  regionDialogVisibilities: Record<string, boolean>;
+  emptyChromosomeFilterApplied: boolean;
 };
 
-const initialState: State = {
-    genomeSummaryData: undefined,
+const initialState: ViewState = {
+  genomeSummaryData: undefined,
+  recordClass: undefined,
+  regionDialogVisibilities: {},
+  emptyChromosomeFilterApplied: false
 };
 
-export function reduce(state: State = initialState, action: Action): State {
-    switch (action.type) {
-        case fulfillGenomeSummaryReport.type: {
-                return { ...state, genomeSummaryData: action.payload.genomeSummaryViewReport }        
-        } default: {
-            return state;
+function reduceView(state: ViewState = initialState, action: Action): ViewState {
+  switch (action.type) {
+    case requestGenomeSummaryReport.type: {
+      return initialState;
+    }
+    case fulfillGenomeSummaryReport.type: {
+      return {
+        ...state,
+        genomeSummaryData: action.payload.genomeSummaryViewReport,
+        recordClass: action.payload.recordClass
+      };
+    }
+    case showRegionDialog.type: {
+      return {
+        ...state,
+        regionDialogVisibilities: {
+          ...state.regionDialogVisibilities,
+          [action.payload.regionId]: true
         }
+      };
     }
+    case hideRegionDialog.type: {
+      return {
+        ...state,
+        regionDialogVisibilities: {
+          ...state.regionDialogVisibilities,
+          [action.payload.regionId]: false
+        }
+      };
+    }
+    case applyEmptyChromosomesFilter.type: {
+      return { ...state, emptyChromosomeFilterApplied: true };
+    }
+    case unapplyEmptyChromosomesFilter.type: {
+      return { ...state, emptyChromosomeFilterApplied: false };
+    }
+    default: {
+      return state;
+    }
+  }
 }
 
-function getFormatFromRecordClassName(recordClassName: string) : string {
-    switch (recordClassName) {
-    case "TranscriptRecordClasses.TranscriptRecordClass":
-        return "geneGenomeSummaryView";
-    case "DynSpanRecordClasses.DynSpanRecordClass":
-        return "dynamicSpanSummaryView";
+function getFormatFromRecordClassName(recordClassName: string): string {
+  switch (recordClassName) {
+    case 'TranscriptRecordClasses.TranscriptRecordClass':
+      return 'geneGenomeSummaryView';
+    case 'DynSpanRecordClasses.DynSpanRecordClass':
+      return 'dynamicSpanSummaryView';
     default:
-        throw "This step cannot use this summary view, it is the wrong record class: " + recordClassName;
-    }
+      throw 'This step cannot use this summary view, it is the wrong record class: ' +
+        recordClassName;
+  }
 }
 
-async function getFormat(stepId: number, wdkService: WdkService) : Promise<string> {
-    let stepBundlePromise = getStepBundlePromise(stepId, wdkService);
-    let bundle = await stepBundlePromise;
-    return getFormatFromRecordClassName(bundle.recordClass.name);
+async function getRecordClassAndFormat(
+  stepId: number,
+  wdkService: WdkService
+): Promise<[string, RecordClass]> {
+  let stepBundlePromise = getStepBundlePromise(stepId, wdkService);
+  let bundle = await stepBundlePromise;
+  return [
+    getFormatFromRecordClassName(bundle.recordClass.name),
+    bundle.recordClass
+  ];
 }
 
-async function getGenomeSummaryViewReport([requestAction]:  [InferAction<typeof requestGenomeSummaryReport>], state$: Observable<State>, { wdkService }: EpicDependencies) : Promise<InferAction<typeof fulfillGenomeSummaryReport>> {
-    let format = await getFormat(requestAction.payload.stepId, wdkService);
-    let report = await wdkService.getStepAnswer(requestAction.payload.stepId, { format: format});
-    return fulfillGenomeSummaryReport((<GenomeSummaryViewReport>report))
+async function getGenomeSummaryViewReport(
+  [requestAction]: [InferAction<typeof requestGenomeSummaryReport>],
+  state$: StateObservable<RootState>,
+  { wdkService }: EpicDependencies
+): Promise<InferAction<typeof fulfillGenomeSummaryReport>> {
+  let [format, recordClass] = await getRecordClassAndFormat(
+    requestAction.payload.stepId,
+    wdkService
+  );
+  let report: GenomeSummaryViewReport = await wdkService.getStepAnswer(
+    requestAction.payload.stepId,
+    { format: format }
+  );
+  return fulfillGenomeSummaryReport(requestAction.payload.viewId, report, recordClass);
 }
 
-export const observe =
-     combineEpics(
-         mergeMapRequestActionsToEpic([requestGenomeSummaryReport], getGenomeSummaryViewReport)
-     );
+export const observe = combineEpics(
+  mergeMapRequestActionsToEpic([requestGenomeSummaryReport], getGenomeSummaryViewReport)
+);

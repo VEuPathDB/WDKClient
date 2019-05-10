@@ -1,7 +1,8 @@
 import * as React from 'react';
+import { History, Location } from 'history';
 
 import 'wdk-client/Views/UserDatasets/UserDatasets.scss';
-import { showLoginForm } from 'wdk-client/Actions/UserActions';
+import { showLoginForm } from 'wdk-client/Actions/UserSessionActions';
 import PageController from 'wdk-client/Core/Controllers/PageController';
 import { wrappable } from 'wdk-client/Utils/ComponentUtils';
 import { UserDataset } from 'wdk-client/Utils/WdkModel';
@@ -29,7 +30,13 @@ const ActionCreators = {
   updateProjectFilter
 };
 
-type Props = typeof ActionCreators & Pick<RootState, 'globalData' | 'userDatasetList'>;
+type StateProps = Pick<RootState, 'globalData' | 'userDatasetList'>;
+type DispatchProps = typeof ActionCreators;
+type OwnProps = {
+  history: History;
+  location: Location;
+}
+type Props = OwnProps & DispatchProps & StateProps;
 
 class UserDatasetListController extends PageController <Props> {
 
@@ -90,14 +97,14 @@ class UserDatasetListController extends PageController <Props> {
     const { projectId, displayName: projectName } = config;
 
     const {
+      history,
+      location,
       userDatasetList: { userDatasets, userDatasetsById, filterByProject },
       shareUserDatasets,
       unshareUserDatasets,
       removeUserDataset,
       updateUserDatasetDetail,
       updateProjectFilter,
-      history,
-      location
     } = this.props;
 
     const listProps = {

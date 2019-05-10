@@ -9,16 +9,24 @@ import * as FilterParamActions from 'wdk-client/Actions/FilterParamActions';
 import * as DatasetParamActions from 'wdk-client/Actions/DatasetParamActions';
 import * as TreeBoxEnumParamActions from 'wdk-client/Actions/TreeBoxEnumParamActions';
 import * as UserActions from 'wdk-client/Actions/UserActions';
+import * as UserCommentFormActions from 'wdk-client/Actions/UserCommentFormActions';
+import * as UserCommentShowActions from 'wdk-client/Actions/UserCommentShowActions';
 import * as RecordActions from 'wdk-client/Actions/RecordActions';
 import * as StaticDataActions from 'wdk-client/Actions/StaticDataActions';
 import * as SiteMapActions from 'wdk-client/Actions/SiteMapActions';
 import * as UserDatasetsActions from 'wdk-client/Actions/UserDatasetsActions';
 import * as ResultTableSummaryViewActions from 'wdk-client/Actions/SummaryView/ResultTableSummaryViewActions';
 import * as BlastSummaryViewActions from 'wdk-client/Actions/SummaryView/BlastSummaryViewActions';
-import * as IsolatesSummaryViewActions from 'wdk-client/Actions/SummaryView/IsolatesSummaryViewActions';
 import * as GenomeSummaryViewActions from 'wdk-client/Actions/SummaryView/GenomeSummaryViewActions';
 import * as StepActions from 'wdk-client/Actions/StepActions';
+import * as WordCloudAnalysisActions from 'wdk-client/Actions/WordCloudAnalysisActions';
+import * as HistogramAnalysisActions from 'wdk-client/Actions/HistogramAnalysisActions';
 import * as MatchedTranscriptsFilterActions from 'wdk-client/Actions/MatchedTranscriptsFilterActions';
+import * as ResultPanelActions from 'wdk-client/Actions/ResultPanelActions';
+import * as UnhandledErrorActions from 'wdk-client/Actions/UnhandledErrorActions';
+import * as UserSessionActions from 'wdk-client/Actions/UserSessionActions';
+// FIXME Change this when StepAnalysis is moved out of `MoveAfterRefactor`
+import { StepAnalysisAction } from 'wdk-client/Core/MoveAfterRefactor/Actions/StepAnalysis/StepAnalysisActions';
 
 export {
   AnswerActions,
@@ -39,9 +47,14 @@ export {
   UserDatasetsActions,
   ResultTableSummaryViewActions,
   BlastSummaryViewActions,
-  IsolatesSummaryViewActions,
   GenomeSummaryViewActions,
+  WordCloudAnalysisActions,
+  HistogramAnalysisActions,
   MatchedTranscriptsFilterActions,
+  ResultPanelActions,
+  UserCommentFormActions,
+  UserCommentShowActions,
+  UserSessionActions,
 };
 
 export type Action =
@@ -61,9 +74,16 @@ export type Action =
   | StaticDataActions.Action
   | StepActions.Action
   | UserDatasetsActions.Action
+  | UserCommentFormActions.Action
+  | UserCommentShowActions.Action
   | ResultTableSummaryViewActions.Action
   | BlastSummaryViewActions.Action
-  | IsolatesSummaryViewActions.Action
   | GenomeSummaryViewActions.Action
+  | WordCloudAnalysisActions.Action
+  | HistogramAnalysisActions.Action
   | MatchedTranscriptsFilterActions.Action
-
+  | ResultPanelActions.Action
+  | UnhandledErrorActions.Action
+  | MatchedTranscriptsFilterActions.Action
+  | UserSessionActions.Action
+  | StepAnalysisAction

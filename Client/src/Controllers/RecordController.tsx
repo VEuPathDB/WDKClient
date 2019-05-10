@@ -3,6 +3,7 @@ import * as React from 'react';
 import { connect } from 'react-redux';
 
 import * as UserActionCreators from 'wdk-client/Actions/UserActions';
+import * as UserSessionActions from 'wdk-client/Actions/UserSessionActions';
 import PageController from 'wdk-client/Core/Controllers/PageController';
 import { wrappable } from 'wdk-client/Utils/ComponentUtils';
 import RecordUI from 'wdk-client/Views/Records/RecordUI';
@@ -23,6 +24,7 @@ import { RootState } from 'wdk-client/Core/State/Types';
 
 const ActionCreators = {
   ...UserActionCreators,
+  ...UserSessionActions,
   loadRecordData,
   updateSectionVisibility,
   updateNavigationQuery,
@@ -33,7 +35,8 @@ const ActionCreators = {
 
 type StateProps = RootState['record'];
 type DispatchProps = typeof ActionCreators;
-type Props = StateProps & DispatchProps;
+type OwnProps = { recordClass: string; primaryKey: string; }
+type Props = { ownProps: OwnProps } & StateProps & DispatchProps;
 
 // FIXME Remove when RecordUI is converted to Typescript
 const CastRecordUI: any = RecordUI;
@@ -97,12 +100,14 @@ class RecordController extends PageController<Props> {
   }
 
   loadData(previousProps?: this['props']) {
+    const { ownProps } = this.props;
+    const { ownProps: prevOwnProps = undefined } = previousProps || {};
     // load data if params have changed
     if (
       previousProps == null ||
-      !isEqual(previousProps.match.params, this.props.match.params)
+      !isEqual(prevOwnProps, ownProps)
     ) {
-      let { recordClass, primaryKey } = this.props.match.params;
+      let { recordClass, primaryKey } = ownProps;
       let pkValues = primaryKey.split('/');
       this.props.loadRecordData(recordClass, pkValues, this.getRecordRequestOptions);
     }
@@ -175,9 +180,10 @@ class RecordController extends PageController<Props> {
 
 }
 
-const enhance = connect<StateProps, DispatchProps, {}, RootState>(
+const enhance = connect<StateProps, DispatchProps, OwnProps, Props, RootState>(
   state => state.record,
-  ActionCreators
+  ActionCreators,
+  (stateProps, dispatchProps, ownProps) => ({ ownProps, ...dispatchProps, ...stateProps })
 )
 
 export default enhance(wrappable(RecordController));

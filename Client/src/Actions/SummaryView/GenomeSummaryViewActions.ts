@@ -1,16 +1,50 @@
-import { makeActionCreator, InferAction } from 'wdk-client/Utils/ActionCreatorUtils';
-import { GenomeSummaryViewReport } from "wdk-client/Utils/WdkModel";
+import {
+  makeActionCreator,
+  InferAction
+} from 'wdk-client/Utils/ActionCreatorUtils';
+import {
+  GenomeSummaryViewReport,
+  RecordClass
+} from 'wdk-client/Utils/WdkModel';
 
 export const requestGenomeSummaryReport = makeActionCreator(
-    'genomeSummaryView/requestGenomeSummaryReport',
-    (stepId: number) => ({ stepId })
-    );
+  'genomeSummaryView/requestGenomeSummaryReport',
+  (viewId: string, stepId: number) => ({ viewId, stepId })
+);
 
 export const fulfillGenomeSummaryReport = makeActionCreator(
-        'genomeSummaryView/fulfillGenomeSummaryReport',
-        (genomeSummaryViewReport: GenomeSummaryViewReport) => ({ genomeSummaryViewReport })
-        );
-    
+  'genomeSummaryView/fulfillGenomeSummaryReport',
+  (
+    viewId: string,
+    genomeSummaryViewReport: GenomeSummaryViewReport,
+    recordClass: RecordClass
+  ) => ({ viewId, genomeSummaryViewReport, recordClass })
+);
+
+export const showRegionDialog = makeActionCreator(
+  'genomeSummaryView/showRegionDialog',
+  (viewId: string, regionId: string) => ({ viewId, regionId })
+);
+
+export const hideRegionDialog = makeActionCreator(
+  'genomeSummaryView/hideRegionDialog',
+  (viewId: string, regionId: string) => ({ viewId, regionId })
+);
+
+export const applyEmptyChromosomesFilter = makeActionCreator(
+  'genomeSummaryView/applyEmptyChromosomesFilter',
+  (viewId: string) => ({ viewId })
+);
+
+export const unapplyEmptyChromosomesFilter = makeActionCreator(
+  'genomeSummaryView/unapplyEmptyChromosomesFilter',
+  (viewId: string) => ({ viewId })
+);
+
 export type Action =
-    | InferAction<typeof requestGenomeSummaryReport>
-    | InferAction<typeof fulfillGenomeSummaryReport>
+  | InferAction<typeof requestGenomeSummaryReport>
+  | InferAction<typeof fulfillGenomeSummaryReport>
+  | InferAction<typeof showRegionDialog>
+  | InferAction<typeof hideRegionDialog>
+  | InferAction<typeof applyEmptyChromosomesFilter>
+  | InferAction<typeof unapplyEmptyChromosomesFilter>;
