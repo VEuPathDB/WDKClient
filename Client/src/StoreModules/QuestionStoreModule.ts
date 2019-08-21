@@ -56,8 +56,8 @@ import {Step} from 'wdk-client/Utils/WdkUser';
 export const key = 'question';
 
 // Defaults
-const DEFAULT_STRATEGY_NAME = 'Unnamed Strategy';
-const DEFAULT_STEP_WEIGHT = 10;
+export const DEFAULT_STRATEGY_NAME = 'Unnamed Strategy';
+export const DEFAULT_STEP_WEIGHT = 10;
 
 interface GroupState {
   isVisible: boolean;
@@ -422,7 +422,8 @@ const observeQuestionSubmit: QuestionEpic = (action$, state$, services) => actio
               searchName: submissionMetadata.operatorSearchName,
               searchConfig: {
                 parameters: operatorParamValues
-              }
+              },
+              customName: operatorQuestionState.question.shortDisplayName
             });
 
             return Promise.all([newSearchStep, operatorStep])
