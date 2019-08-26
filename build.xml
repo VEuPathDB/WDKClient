@@ -1,41 +1,25 @@
 <project name="WDKClient" default="Installation" basedir=".">
 
   <!-- oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo -->
-  <!-- oooooooooooooooooooooooooo  Dependencies  oooooooooooooooooooooooooo -->
-  <!-- oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo -->
-
-  <!-- oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo -->
-  <!-- oooooooooooooooooooooooooo    Checkout    oooooooooooooooooooooooooo -->
-  <!-- oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo -->
-
-  <target name="WDKClient-ChildCheckout"/>
-
-  <!-- oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo -->
-  <!-- oooooooooooooooooooooooooo    Update    oooooooooooooooooooooooooooo -->
-  <!-- oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo -->
-
-  <target name="WDKClient-ChildUpdate"/>
-
-  <!-- oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo -->
   <!-- oooooooooooooooooooooooooo  Installation  oooooooooooooooooooooooooo -->
   <!-- oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo -->
 
   <target name="WDKClient-Installation">
     <ant target="defaultProjectInstall">
-      <property name="project" value="WDKClient"/>
+      <property name="project" value="WDKClient" />
     </ant>
     <!-- although WDKClient doesn't have component, but this call is needed to record build information. -->
     <ant target="defaultComponentInstall">
-      <property name="project" value="WDKClient"/>
-      <property name="component" value="Client"/>
+      <property name="project" value="WDKClient" />
+      <property name="component" value="Client" />
     </ant>
   </target>
 
   <!-- ooooooooooooooooooooooo  Install Components  ooooooooooooooooooooooo -->
 
-  <target name="WDKClient/Build-Installation"/>
+  <target name="WDKClient/Build-Installation" />
 
-  <target name="WDKClient/Client-Installation"/>
+  <target name="WDKClient/Client-Installation" />
 
 
   <!-- oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo -->
@@ -53,7 +37,7 @@
   <!-- oooooooooooooooooooooooooooo  Release  ooooooooooooooooooooooooooooo -->
   <!-- oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo -->
 
-  <target name="WDKClient-Release"/>
+  <target name="WDKClient-Release" />
 
 </project>
 
