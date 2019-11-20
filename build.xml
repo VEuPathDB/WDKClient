@@ -30,7 +30,12 @@
 
   <target name="WDKClient/Build-WebInstallation" />
 
-  <target name="WDKClient/Client-WebInstallation" />
+  <target name="WDKClient/Client-WebInstallation">
+    <ant target="defaultWebComponentInstall">
+      <property name="project" value="WDKClient"/>
+      <property name="component" value="Client"/>
+    </ant>
+  </target>
 
 
   <!-- oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo -->
