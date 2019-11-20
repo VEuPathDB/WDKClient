@@ -34,7 +34,7 @@
     "history": "^4.7.2",
     "json-stable-stringify": "^1.0.0",
     "localforage": "^1.5.0",
-    "lodash": "^4.17.5",
+    "lodash": "^4.17.13",
     "mansion-ui": "^2.5.2",
     "moment": "^2.21.0",
     "natural-sort": "^1.0.0",
