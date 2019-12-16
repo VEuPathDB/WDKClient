@@ -1,29 +1,17 @@
-import { difference, union } from 'lodash';
-
+import { chunk, difference, union, uniq } from 'lodash';
+import { ActionsObservable, StateObservable } from 'redux-observable';
+import { EMPTY, from, Observable } from 'rxjs';
+import { bufferTime, filter, groupBy, mergeMap, tap } from 'rxjs/operators';
+import { Action } from 'wdk-client/Actions';
+import { ALL_FIELD_VISIBILITY, CATEGORY_EXPANSION, NAVIGATION_QUERY, NAVIGATION_VISIBILITY, RecordUpdatedAction, RECORD_ERROR, RECORD_LOADING, RECORD_RECEIVED, RECORD_UPDATE, RequestPartialRecord, REQUEST_PARTIAL_RECORD, SECTION_VISIBILITY, SET_COLLAPSED_SECTIONS } from 'wdk-client/Actions/RecordActions';
+import { BASKET_STATUS_ERROR, BASKET_STATUS_LOADING, BASKET_STATUS_RECEIVED, FAVORITES_STATUS_ERROR, FAVORITES_STATUS_LOADING, FAVORITES_STATUS_RECEIVED } from 'wdk-client/Actions/UserActions';
+import { RootState } from 'wdk-client/Core/State/Types';
+import { EpicDependencies } from 'wdk-client/Core/Store';
 import { CategoryTreeNode, getId, getTargetType } from 'wdk-client/Utils/CategoryUtils';
 import { filterNodes } from 'wdk-client/Utils/TreeUtils';
 import { RecordClass, RecordInstance } from 'wdk-client/Utils/WdkModel';
 import { ServiceError } from 'wdk-client/Utils/WdkService';
-import { Action } from 'wdk-client/Actions';
-import {
-  RECORD_LOADING,
-  RECORD_RECEIVED,
-  RECORD_UPDATE,
-  RECORD_ERROR,
-  SECTION_VISIBILITY,
-  ALL_FIELD_VISIBILITY,
-  NAVIGATION_QUERY,
-  NAVIGATION_VISIBILITY,
-  CATEGORY_EXPANSION
-} from 'wdk-client/Actions/RecordActions';
-import {
-  BASKET_STATUS_LOADING,
-  BASKET_STATUS_RECEIVED,
-  BASKET_STATUS_ERROR,
-  FAVORITES_STATUS_LOADING,
-  FAVORITES_STATUS_RECEIVED,
-  FAVORITES_STATUS_ERROR
-} from 'wdk-client/Actions/UserActions';
+
 
 export const key = 'record';
 
@@ -97,6 +85,11 @@ export function reduce(state: State = {} as State, action: Action): State {
         state.collapsedSections
       );
       return { ...state, collapsedSections };
+    }
+
+    case SET_COLLAPSED_SECTIONS: {
+      let { names } = action.payload;
+      return { ...state, collapsedSections: names };
     }
 
     /**
@@ -196,7 +189,7 @@ function updateList<T>(item: T, add: boolean, list: T[] = []) {
 }
 
 /** Get all attributes and tables of active record */
-function getAllFields(state: State) {
+export function getAllFields(state: State) {
   return filterNodes(isFieldNode, state.categoryTree)
   .map(getId);
 }
@@ -205,4 +198,45 @@ function getAllFields(state: State) {
 function isFieldNode(node: CategoryTreeNode) {
   let targetType = getTargetType(node);
   return targetType === 'attribute' || targetType === 'table';
+}
+
+type RecordOptions = {
+  attributes: string[];
+  tables: string[];
+}
+
+export const observe = observeRecordRequests;
+
+function observeRecordRequests(action$: ActionsObservable<Action>, state$: StateObservable<RootState>, deps: EpicDependencies): Observable<Action> {
+  return action$.pipe(
+    filter((action): action is RequestPartialRecord => action.type === REQUEST_PARTIAL_RECORD),
+    groupBy(action => action.id),
+    mergeMap(group$ => group$.pipe(
+      bufferTime(100),
+      mergeMap(actions => chunk(actions, 10)),
+      mergeMap((actions: RequestPartialRecord[]) => {
+        // build up request object
+        if (actions.length === 0) return EMPTY;
+        // XXX Assuming recordClassName and primaryKey are the same for a given `id`
+        const { id } = actions[0];
+        const { recordClassName, primaryKey } = actions[0].payload;
+        const options = actions.reduce((options, action) => {
+          const { attributes = [], tables = [] } = action.payload;
+          return Object.assign(options, {
+            attributes: uniq([ ...options.attributes, ...attributes ]),
+            tables: uniq([ ...options.tables, ...tables])
+          })
+        }, { attributes: [], tables: [] } as RecordOptions);
+        return from(deps.wdkService.getRecord(recordClassName, primaryKey, options).then(
+          record => ({
+            type: RECORD_UPDATE,
+            id,
+            payload: {
+              record
+            }
+          } as RecordUpdatedAction)
+        ));
+      })
+    ))
+  )
 }

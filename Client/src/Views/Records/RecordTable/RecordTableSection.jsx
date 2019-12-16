@@ -1,19 +1,28 @@
-import PropTypes from 'prop-types';
 import { includes } from 'lodash';
-import { safeHtml, wrappable } from 'wdk-client/Utils/ComponentUtils';
-import RecordTable from 'wdk-client/Views/Records/RecordTable/RecordTable';
-import RecordTableDescription from 'wdk-client/Views/Records/RecordTable/RecordTableDescription';
+import PropTypes from 'prop-types';
+import { useEffect, useRef } from 'react';
 import CollapsibleSection from 'wdk-client/Components/Display/CollapsibleSection';
 import ErrorBoundary from 'wdk-client/Core/Controllers/ErrorBoundary';
+import { wrappable } from 'wdk-client/Utils/ComponentUtils';
+import RecordTable from 'wdk-client/Views/Records/RecordTable/RecordTable';
+import RecordTableDescription from 'wdk-client/Views/Records/RecordTable/RecordTableDescription';
 
 /** Record table section on record page */
 function RecordTableSection(props) {
-  let { table, record, recordClass, isCollapsed, onCollapsedChange } = props;
+  let { table, record, recordClass, isCollapsed, onCollapsedChange, requestPartialRecord } = props;
   let { name, displayName, description } = table;
   let value = record.tables[name];
   let isError = includes(record.tableErrors, name);
   let isLoading = value == null;
   let className = [ 'wdk-RecordTable', 'wdk-RecordTable__' + table.name ].join(' ');
+
+  const requestedRef = useRef(false);
+
+  useEffect(() => {
+    if (isCollapsed || requestedRef.current) return;
+    requestPartialRecord({ tables: [ name ]})
+    requestedRef.current = true;
+  }, [ isCollapsed ])
 
   return (
     <CollapsibleSection
@@ -39,7 +48,8 @@ RecordTableSection.propTypes = {
   record: PropTypes.object.isRequired,
   recordClass: PropTypes.object.isRequired,
   isCollapsed: PropTypes.bool.isRequired,
-  onCollapsedChange: PropTypes.func.isRequired
+  onCollapsedChange: PropTypes.func.isRequired,
+  requestPartialRecord: PropTypes.func.isRequired
 };
 
 export default wrappable(RecordTableSection);
