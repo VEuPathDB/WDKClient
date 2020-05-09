@@ -623,8 +623,7 @@ async function loadQuestion(
       : await wdkService.getQuestionGivenParameters(searchName, step.searchConfig.parameters);
     const recordClass = await wdkService.findRecordClass(question.outputRecordClassName);
     const paramValues = step != null ? integrateStepAndDefaultParamValues(question.parameters, step)
-                      : initialParamData != null ? extractRealParamValues(question.parameters, initialParamData)
-                      : makeDefaultParamValues(question.parameters)
+                                     : integrateInitialAndDefaultParamValues(question.parameters, initialParamData);
     const wdkWeight = step == null ? undefined : step.searchConfig.wdkWeight;
     return questionLoaded({
       autoRun,
@@ -644,31 +643,20 @@ async function loadQuestion(
   }
 }
 
-function makeDefaultParamValues(parameters: Parameter[]): ParameterValues {
+function integrateInitialAndDefaultParamValues(parameters: Parameter[], initialParamData?: Record<string, string>): ParameterValues {
   return parameters.reduce(function(values, { name, initialDisplayValue, type }) {
     return Object.assign(
-      values,
-      type === 'input-step'
-        ? {
-          [name]: ''
-        }
-        : {
-          [name]: initialDisplayValue
-        }
+      values,{
+        [name]: (
+          type === 'input-step'
+          ? ''
+          : (initialParamData != null && name in initialParamData)
+            ? initialParamData[name]
+            : initialDisplayValue
+        )
+      }
     );
   }, {} as ParameterValues);
-}
-
-function extractRealParamValues(parameters: Parameter[], initialParamData: Record<string, string>): ParameterValues {
-  const realEntries = parameters.map(parameter =>
-    [
-      parameter.name,
-      parameter.name in initialParamData
-        ? initialParamData[parameter.name]
-        : isMultiPick(parameter) ? '[]' : ''
-    ]
-  );
-  return Object.fromEntries(realEntries);
 }
 
 function integrateStepAndDefaultParamValues(parameters: Parameter[], step: Step): ParameterValues {
