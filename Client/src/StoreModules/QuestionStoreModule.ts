@@ -620,7 +620,7 @@ async function loadQuestion(
   const initialParams = step ? initialParamDataFromStep(step) : initialParamData != null ? initialParamData : {};
 
   try {
-    const question = initialParams.keys
+    const question = Object.keys(initialParams).length > 0
       ? await wdkService.getQuestionGivenParameters(searchName, initialParams)
       : await wdkService.getQuestionAndParameters(searchName);
 
@@ -657,4 +657,12 @@ async function loadQuestion(
       : questionError({ searchName });
   }
 }
+initialParamDataFromStep(step: Step): Record<string, string> {
+  const { searchConfig: { parameters: currentParamValues }, validation } = step;
+  const keyedErrors = validation.isValid == true ? {} : validation.errors.byKey;
+  return Object.keys(parameters).reduce((values, k) => (
+    k in keyedErrors ? values : Object.assign(values, {[k]: parameters[k]})
+  ), {});
+}
+
 
