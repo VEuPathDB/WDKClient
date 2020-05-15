@@ -657,12 +657,12 @@ async function loadQuestion(
       : questionError({ searchName });
   }
 }
-initialParamDataFromStep(step: Step): Record<string, string> {
-  const { searchConfig: { parameters: currentParamValues }, validation } = step;
+function initialParamDataFromStep(step: Step): Record<string, string> {
+  const { searchConfig: { parameters }, validation } = step;
   const keyedErrors = validation.isValid == true ? {} : validation.errors.byKey;
-  return Object.keys(parameters).reduce((values, k) => (
-    k in keyedErrors ? values : Object.assign(values, {[k]: parameters[k]})
-  ), {});
+  return Object.keys(parameters).reduce(function (values, k) {
+    return (k in keyedErrors ? values : Object.assign(values, {[k]: parameters[k]}))
+  }, {});
 }
 
 
