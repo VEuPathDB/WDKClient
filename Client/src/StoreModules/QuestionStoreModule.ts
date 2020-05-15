@@ -617,13 +617,28 @@ async function loadQuestion(
   initialParamData?: Record<string, string>,
 ) {
   const step = stepId ? await wdkService.findStep(stepId) : undefined;
+  const initialParams = step ? initialParamDataFromStep(step) : initialParamData != null ? initialParamData : {};
+
   try {
-    const question = step == null
-      ? await wdkService.getQuestionAndParameters(searchName)
-      : await wdkService.getQuestionGivenParameters(searchName, step.searchConfig.parameters);
+    const question = initialParams.keys
+      ? await wdkService.getQuestionGivenParameters(searchName, initialParams)
+      : await wdkService.getQuestionAndParameters(searchName);
+
     const recordClass = await wdkService.findRecordClass(question.outputRecordClassName);
-    const paramValues = step != null ? integrateStepAndDefaultParamValues(question.parameters, step)
-                                     : integrateInitialAndDefaultParamValues(question.parameters, initialParamData);
+    const paramValues = question.parameters.reduce(function(values, { name, initialDisplayValue, type }) {
+      return Object.assign(
+        values,{
+          [name]: (
+            (step == null && type === 'input-step')
+            ? ''
+            : (name in initialParams)
+              ? initialParams[name]
+              : initialDisplayValue
+          )
+        }
+      );
+    }, {} as ParameterValues);
+
     const wdkWeight = step == null ? undefined : step.searchConfig.wdkWeight;
     return questionLoaded({
       autoRun,
@@ -631,7 +646,7 @@ async function loadQuestion(
       question,
       recordClass,
       paramValues,
-      initialParamData,
+      initialParamData, // Intentionally not initialParams to preserve previous behaviour ( an "INIT_PARAM" action triggered)
       wdkWeight,
       stepValidation: step && step.validation
     })
@@ -643,31 +658,3 @@ async function loadQuestion(
   }
 }
 
-function integrateInitialAndDefaultParamValues(parameters: Parameter[], initialParamData?: Record<string, string>): ParameterValues {
-  return parameters.reduce(function(values, { name, initialDisplayValue, type }) {
-    return Object.assign(
-      values,{
-        [name]: (
-          type === 'input-step'
-          ? ''
-          : (initialParamData != null && name in initialParamData)
-            ? initialParamData[name]
-            : initialDisplayValue
-        )
-      }
-    );
-  }, {} as ParameterValues);
-}
-
-function integrateStepAndDefaultParamValues(parameters: Parameter[], step: Step): ParameterValues {
-  const { searchConfig: { parameters: currentParamValues }, validation } = step;
-  const keyedErrors = validation.isValid == true ? {} : validation.errors.byKey;
-  return parameters.reduce(function(values, { name, initialDisplayValue }): ParameterValues {
-    const value = (name in currentParamValues) && !(name in keyedErrors)
-      ? currentParamValues[name]
-      : initialDisplayValue;
-    return Object.assign(values, {
-      [name]: value
-    });
-  }, {} as ParameterValues);
-}
