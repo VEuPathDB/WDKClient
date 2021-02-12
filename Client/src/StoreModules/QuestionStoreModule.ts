@@ -444,6 +444,25 @@ const observeStoreUpdatedParams: QuestionEpic = (action$, state$, { paramValueSt
   mergeAll()
 );
 
+const observeQuestionLoadForWizardTotalCount: QuestionEpic = (action$, state$, { wdkService }) => action$.pipe(
+  ofType<QuestionLoadedAction>(QUESTION_LOADED),
+  mergeMap((action: QuestionLoadedAction) => {
+    const {searchName} = action.payload;
+    const questionState = state$.value.question.questions[searchName];
+    if (questionState == null || questionState.question.properties?.websiteProperties?.includes('useWizard') !== true) return EMPTY;
+    const answerSpec = {
+      searchName,
+      searchConfig: {
+        parameters: questionState.defaultParamValues
+      }
+    };
+    const formatConfig = {
+      pagination: { offset: 0, numRecords: 0 }
+    };
+    return from(wdkService.getAnswerJson(answerSpec, formatConfig).then(answer => groupCountLoaded({searchName, groupName: '__total__', filteredCount: answer.meta.totalCount})));
+  })
+);
+
 type ActionAffectingGroupCount = ChangeGroupVisibilityAction | UpdateParamValueAction;
 
 const observeLoadGroupCount: QuestionEpic = (action$, state$, { wdkService }) => action$.pipe(
@@ -739,6 +758,7 @@ export const observeQuestion: QuestionEpic = combineEpics(
   observeStoreUpdatedParams,
   observeUpdateDependentParams,
   observeLoadGroupCount,
+  observeQuestionLoadForWizardTotalCount,
   observeQuestionSubmit,
   mrate([submitQuestion, fulfillCreateStrategy], goToStrategyPage, {
     areActionsCoherent: ([ submitAction ]) => (
