@@ -60,7 +60,11 @@ function observeShowLoginForm(
     filter(showLoginForm.isOfType),
     mergeMap(async action => {
       const { destination = window.location.href } = action.payload;
-      const config = await wdkService.getConfig();
+      const [config, { id: guestUserId }] = await Promise.all([
+        wdkService.getConfig(),
+        wdkService.getCurrentUser()
+      ]);
+      sessionStorage.setItem('login::guestUserId', `${guestUserId}`);
       let { oauthClientId, oauthClientUrl, oauthUrl, method } = config.authentication;
       if (method === 'OAUTH2') {
         return performOAuthLogin(destination, wdkService, oauthClientId, oauthClientUrl, oauthUrl);
