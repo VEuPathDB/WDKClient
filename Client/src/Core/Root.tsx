@@ -4,8 +4,10 @@ import * as React from 'react';
 import { Router, Switch, matchPath } from 'react-router';
 
 import { ClientPluginRegistryEntry, PluginContext, makeCompositePluginComponent } from 'wdk-client/Utils/ClientPlugin';
+import { Task } from 'wdk-client/Utils/Task';
 import ErrorBoundary from 'wdk-client/Core/Controllers/ErrorBoundary';
 import LoginFormController from 'wdk-client/Controllers/LoginFormController';
+import { Loading } from 'wdk-client/Components';
 import Page from 'wdk-client/Components/Layout/Page';
 
 import { Store } from 'redux';
@@ -16,11 +18,13 @@ import { safeHtml } from 'wdk-client/Utils/ComponentUtils';
 import UnhandledErrorsController from 'wdk-client/Controllers/UnhandledErrorsController';
 import { WdkDependencies, WdkDepdendenciesContext } from 'wdk-client/Hooks/WdkDependenciesEffect';
 
+
 type Props = {
   rootUrl: string,
   routes: RouteEntry[],
   pluginConfig: ClientPluginRegistryEntry<any>[],
   onLocationChange: (location: Location) => void,
+  onLogin?: Task<void, unknown>,
   history: History,
   store: Store,
   wdkDependencies: WdkDependencies,
@@ -29,6 +33,7 @@ type Props = {
 
 interface State {
   location: Location;
+  loginComplete: boolean;
 }
 
 const REACT_ROUTER_LINK_CLASSNAME = 'wdk-ReactRouterLink';
@@ -51,6 +56,7 @@ export default class Root extends React.Component<Props, State> {
   };
 
   removeHistoryListener: () => void;
+  cancelOnLogin = () => {};
 
   constructor(props: Props) {
     super(props);
@@ -61,7 +67,8 @@ export default class Root extends React.Component<Props, State> {
     });
     this.props.onLocationChange(this.props.history.location);
     this.state = {
-      location: this.props.history.location
+      location: this.props.history.location,
+      loginComplete: this.props.onLogin == null
     };
   }
 
@@ -89,17 +96,30 @@ export default class Root extends React.Component<Props, State> {
 
   componentDidMount() {
     /** install global click handler */
-    document.addEventListener('click', this.handleGlobalClick)
+    document.addEventListener('click', this.handleGlobalClick);
+
+    if (this.props.onLogin != null) {
+      this.cancelOnLogin = this.props.onLogin.run(
+        () => {
+          this.setState({ loginComplete: true });
+        },
+        e => {
+          this.setState({ loginComplete: true });
+          throw e;
+        }
+      );
+    }
   }
 
   componentWillUnmount() {
-    document.removeEventListener('click', this.handleGlobalClick)
+    document.removeEventListener('click', this.handleGlobalClick);
     this.removeHistoryListener();
+    this.cancelOnLogin();
   }
 
   render() {
     const { routes, staticContent } = this.props;
-    const { location } = this.state;
+    const { location, loginComplete } = this.state;
     const activeRoute = routes.find(({ path, exact = true }) => matchPath(location.pathname, { path, exact }));
     const rootClassNameModifier = activeRoute && activeRoute.rootClassNameModifier;
     return (
@@ -109,24 +129,30 @@ export default class Root extends React.Component<Props, State> {
             <WdkDepdendenciesContext.Provider value={this.props.wdkDependencies}>
               <PluginContext.Provider value={makeCompositePluginComponent(this.props.pluginConfig)}>
                 <Page classNameModifier={rootClassNameModifier}>
-                  {staticContent ? safeHtml(staticContent, null, 'div') : (
-                    <UnhandledErrorsController>
-                      <>
-                        <Switch>
-                          {this.props.routes.map(({ path, exact = true, component, requiresLogin = false }) => (
-                            <WdkRoute
-                              key={path}
-                              exact={exact == null ? false: exact}
-                              path={path}
-                              component={component}
-                              requiresLogin={requiresLogin}
-                            />
-                          ))}
-                        </Switch>
-                        <LoginFormController />
-                      </>
-                    </UnhandledErrorsController>
-                  )}
+                  {
+                    !loginComplete
+                      ? <Loading>
+                          <div className="wdk-LoadingData">Loading data...</div>
+                        </Loading>
+                      : staticContent
+                      ? safeHtml(staticContent, null, 'div')
+                      : <UnhandledErrorsController>
+                          <>
+                            <Switch>
+                              {this.props.routes.map(({ path, exact = true, component, requiresLogin = false }) => (
+                                <WdkRoute
+                                  key={path}
+                                  exact={exact == null ? false: exact}
+                                  path={path}
+                                  component={component}
+                                  requiresLogin={requiresLogin}
+                                />
+                              ))}
+                            </Switch>
+                            <LoginFormController />
+                          </>
+                        </UnhandledErrorsController>
+                  }
                 </Page>
               </PluginContext.Provider>
             </WdkDepdendenciesContext.Provider>
