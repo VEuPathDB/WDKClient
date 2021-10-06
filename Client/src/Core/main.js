@@ -12,6 +12,7 @@ import { ClientPluginRegistryEntry } from 'wdk-client/Utils/ClientPlugin'; // es
 import { createMockHistory } from 'wdk-client/Utils/MockHistory';
 import { getTransitioner } from 'wdk-client/Utils/PageTransitioner';
 import { getInstance as getParamValueStoreInstance } from 'wdk-client/Utils/ParamValueStore';
+import { Task } from 'wdk-client/Utils/Task';
 import { getInstance } from 'wdk-client/Service/WdkService';
 import { updateLocation } from 'wdk-client/Actions/RouterActions';
 import { loadAllStaticData } from 'wdk-client/Actions/StaticDataActions';
@@ -48,6 +49,10 @@ export const GUEST_USER_ID_KEY = 'login::guestUserId';
  * @param {Function} [options.onLocationChange] Callback function called whenever
  *   the location of the page changes. The function is called with a Location
  *   object.
+ * @param {Function?} [options.onLogin] A function which, upon login of a registered user,
+ *   is called with WdkDependencies and the guest user id, and returns a Task.
+ *   The page content will not be rendered until the Task is fulfilled or rejected.
+ *   (Use case: transferring resources from the guest user to the logged in user.)
  * @param {ClientPluginRegistryEntry<unknown>[]} [options.pluginConfig]
  * @param {ReduxMiddleware[]} [options.additionalMiddleware]
  */
@@ -61,6 +66,7 @@ export function initialize(options) {
     wrapStoreModules = identity,
     wrapWdkService = identity,
     onLocationChange,
+    onLogin,
     pluginConfig = [],
     additionalMiddleware
   } = options;
@@ -102,6 +108,10 @@ export function initialize(options) {
       store.dispatch(updateLocation(location));
     };
     if (container != null) {
+      let guestUserIdStr = sessionStorage.getItem(GUEST_USER_ID_KEY);
+      sessionStorage.removeItem(GUEST_USER_ID_KEY);
+      let guestUserId = parseInt(guestUserIdStr, 10);
+
       let applicationElement = createElement(
         Root, {
           rootUrl,
@@ -110,6 +120,16 @@ export function initialize(options) {
           pluginConfig: pluginConfig.concat(defaultPluginConfig),
           routes: wrapRoutes(wdkRoutes),
           onLocationChange: handleLocationChange,
+          onLogin: onLogin == null || Number.isNaN(guestUserId)
+            ? undefined
+            : Task.fromPromise(
+                () => wdkDependencies.wdkService.getCurrentUser()
+              )
+              .chain(({ isGuest }) =>
+                isGuest
+                  ? Task.of()
+                  : onLogin(wdkDependencies, guestUserId)
+              ),
           wdkDependencies,
           staticContent: retainContainerContent ? container.innerHTML : undefined
         });
