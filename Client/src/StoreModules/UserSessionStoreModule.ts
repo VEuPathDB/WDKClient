@@ -20,6 +20,7 @@ import {
 } from 'wdk-client/Actions/UserSessionActions';
 import { WdkService } from 'wdk-client/Core';
 import { RootState } from 'wdk-client/Core/State/Types';
+import { GUEST_USER_ID_KEY } from 'wdk-client/Core/main';
 
 export const key = 'userSession';
 
@@ -64,7 +65,7 @@ function observeShowLoginForm(
         wdkService.getConfig(),
         wdkService.getCurrentUser()
       ]);
-      sessionStorage.setItem('login::guestUserId', `${guestUserId}`);
+      sessionStorage.setItem(GUEST_USER_ID_KEY, `${guestUserId}`);
       let { oauthClientId, oauthClientUrl, oauthUrl, method } = config.authentication;
       if (method === 'OAUTH2') {
         return performOAuthLogin(destination, wdkService, oauthClientId, oauthClientUrl, oauthUrl);

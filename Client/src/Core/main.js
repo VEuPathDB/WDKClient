@@ -23,6 +23,8 @@ import defaultPluginConfig from 'wdk-client/Core/pluginConfig';
 import storeModules from 'wdk-client/StoreModules';
 import { createWdkStore } from 'wdk-client/Core/Store';
 
+export const GUEST_USER_ID_KEY = 'login::guestUserId';
+
 /**
  * Initialize the application.
  *
