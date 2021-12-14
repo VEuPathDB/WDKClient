@@ -52,7 +52,7 @@ export const RegionDialog: React.SFC<RegionDialogProps> = ({
                   key={feature.sourceId} 
                   className={`feature ${region.strand}`}
                   style={{
-                    left: `${feature.percentStart}%`,
+                    leftt: `${feature.percentStart}%`,
                     width: `${feature.percentLength}%`
                   }}
                 >
