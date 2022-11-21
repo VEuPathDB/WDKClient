@@ -37,7 +37,8 @@ export function reduce(state: State = initialState, action: Action): State {
 // TODO Allow this to be configured by wdk-client consumer
 function ignoreError(message: string): boolean {
   return (
-    /ResizeObserver loop limit exceeded/.test(message)
+    /ResizeObserver loop limit exceeded/.test(message) ||
+    /empty textures are not allowed/.test(message)
   )
 }
 
