@@ -1,4 +1,4 @@
-import React, { ReactNode } from "react";
+import React, { ReactNode, CSSProperties } from "react";
 import { makeClassNameHelper } from "wdk-client/Utils/ComponentUtils";
 import { NavLink, NavLinkProps } from "react-router-dom";
 
@@ -15,14 +15,16 @@ interface Props {
   heading: ReactNode;
   routeBase: string;
   items: WorkspaceNavigationItem[];
+  // add offset at the top of this WorkspaceNavigation to avoid overlap with other element
+  topOffset?: CSSProperties['top'],
 }
 
 const cx = makeClassNameHelper('WorkspaceNavigation');
 
 export default function WorkspaceNavigation(props: Props) {
-  const { heading, items, routeBase } = props;
+  const { heading, items, routeBase, topOffset } = props;
   return (
-    <div className={cx()}>
+    <div className={cx()} style={{ top: topOffset }}>
       <h1>{heading}</h1>
       {items.map((item, index) => (
         <NavLink
