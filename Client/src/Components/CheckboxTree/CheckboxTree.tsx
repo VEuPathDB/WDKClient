@@ -556,16 +556,6 @@ export default class CheckboxTree<T> extends Component<Props<T>, State<T>> {
     linksPosition: LinksPosition.Both
   };
 
-  expandAll: TreeLinkHandler;
-  expandNone: TreeLinkHandler;
-  selectAll: TreeLinkHandler;
-  selectNone: TreeLinkHandler;
-  addVisible: TreeLinkHandler;
-  removeVisible: TreeLinkHandler;
-  selectOnlyVisible: TreeLinkHandler;
-  selectCurrentList: TreeLinkHandler;
-  selectDefaultList: TreeLinkHandler;
-
   /**
    * Hards binds all the user interaction methods to this object.
    * @param props - component properties
@@ -585,43 +575,8 @@ export default class CheckboxTree<T> extends Component<Props<T>, State<T>> {
       generated: applyPropsToStatefulTree(createStatefulTree(tree, getNodeChildren), props, isLeafVisible, undefined)
     };
 
-    // define event handlers related to expansion
-    this.expandAll = createExpander(this, () => getBranches(this.props.tree, getNodeChildren).map(node => getNodeId(node)));
-    this.expandNone = createExpander(this, () => []);
     this.toggleExpansion = this.toggleExpansion.bind(this);
 
-    // define event handlers related to selection
-
-    // add all nodes to selectedList
-    this.selectAll = createSelector(this, () =>
-      getLeaves(this.props.tree, getNodeChildren).map(getNodeId))
-
-    // remove all nodes from selectedList
-    this.selectNone = createSelector(this, () => [])
-
-    // add visible nodes to selectedList
-    this.addVisible = createSelector(this, () =>
-      Seq.from(this.props.selectedList)
-        .concat(getLeaves(this.props.tree, getNodeChildren)
-          .map(getNodeId)
-          .filter(this.state.isLeafVisible))
-        .uniq()
-        .toArray());
-
-    // set selected list to only visible nodes
-    this.selectOnlyVisible = createSelector(this, () =>
-      getLeaves(this.props.tree, getNodeChildren)
-      .map(getNodeId)
-      .filter(this.state.isLeafVisible));
-
-    // remove visible nodes from selectedList
-    this.removeVisible = createSelector(this, () =>
-      this.props.selectedList
-        .filter(nodeId => !this.state.isLeafVisible(nodeId)));
-
-
-    this.selectCurrentList = createSelector(this, () => this.props.currentList);
-    this.selectDefaultList = createSelector(this, () => this.props.defaultList);
     this.toggleSelection = this.toggleSelection.bind(this);
     this.renderNode = this.renderNode.bind(this);
   }
@@ -744,7 +699,8 @@ export default class CheckboxTree<T> extends Component<Props<T>, State<T>> {
       searchBoxPlaceholder, searchBoxHelp, searchIconName,
       linksPosition = LinksPosition.Both, additionalActions,
       additionalFilters, isAdditionalFilterApplied, wrapTreeSection,
-      onSearchTermChange, autoFocusSearchBox, shouldExpandOnClick = true
+      onSearchTermChange, autoFocusSearchBox, shouldExpandOnClick = true,
+      getNodeChildren
     } = this.props;
     let topLevelNodes = (showRoot ? [ this.state.generated.statefulTree ] :
       getStatefulChildren(this.state.generated.statefulTree));
@@ -756,15 +712,46 @@ export default class CheckboxTree<T> extends Component<Props<T>, State<T>> {
     let treeLinks = (
       <TreeLinks
         isFiltered={isFiltered(searchTerm, isAdditionalFilterApplied)}
-        selectAll={this.selectAll}
-        selectNone={this.selectNone}
-        addVisible={this.addVisible}
-        selectOnlyVisible={this.selectOnlyVisible}
-        removeVisible={this.removeVisible}
-        expandAll={this.expandAll}
-        expandNone={this.expandNone}
-        selectCurrentList={this.selectCurrentList}
-        selectDefaultList={this.selectDefaultList}
+        selectAll={
+          // add all nodes to selectedList
+          createSelector(this, () =>
+            getLeaves(this.props.tree, getNodeChildren).map(getNodeId))
+        }
+        selectNone={
+          // remove all nodes from selectedList
+          createSelector(this, () => [])
+        }
+        addVisible={
+          // add visible nodes to selectedList
+          createSelector(this, () =>
+            Seq.from(this.props.selectedList)
+              .concat(getLeaves(this.props.tree, getNodeChildren)
+                .map(getNodeId)
+                .filter(this.state.isLeafVisible))
+              .uniq()
+          .toArray())
+        }
+        selectOnlyVisible={
+          // set selected list to only visible nodes
+          createSelector(this, () =>
+            getLeaves(this.props.tree, getNodeChildren)
+            .map(getNodeId)
+            .filter(this.state.isLeafVisible))
+        }
+        removeVisible={
+          // remove visible nodes from selectedList
+          createSelector(this, () =>
+            this.props.selectedList
+              .filter(nodeId => !this.state.isLeafVisible(nodeId)))
+        }
+        expandAll={createExpander(this, () => getBranches(this.props.tree, getNodeChildren).map(node => getNodeId(node)))}
+        expandNone={createExpander(this, () => [])}
+        selectCurrentList={
+          createSelector(this, () => this.props.currentList)
+        }
+        selectDefaultList={
+          createSelector(this, () => this.props.defaultList)
+        }
         showSelectionLinks={!!isSelectable && !!isMultiPick}
         showCurrentLink={currentList != null}
         showDefaultLink={defaultList != null}
