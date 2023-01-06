@@ -29,11 +29,21 @@ import BasketController from 'wdk-client/Controllers/BasketController';
 import { Loading, PermissionDenied } from 'wdk-client/Components';
 import NotFound from 'wdk-client/Views/NotFound/NotFound';
 import Error from 'wdk-client/Components/PageStatus/Error';
+import { AnswerNew } from 'wdk-client/Views/AnswerNew/AnswerNew';
 
 const routes: RouteEntry[] = [
   {
     path: '/',
     component: () => <IndexController/>
+  },
+
+  {
+    path: '/answer/:searchName',
+    component: (props: RouteComponentProps<{searchName: string}>) => {
+      return (
+        <AnswerNew searchName={props.match.params.searchName} />
+      )
+    }
   },
 
   {

@@ -376,7 +376,7 @@ export interface EnableSubmissionAction {
   payload: QuestionPayload<{ stepValidation?: Step['validation'] }>;
 }
 
-function enableSubmission(payload: EnableSubmissionAction['payload']): EnableSubmissionAction {
+export function enableSubmission(payload: EnableSubmissionAction['payload']): EnableSubmissionAction {
   return {
     type: ENABLE_SUBMISSION,
     payload

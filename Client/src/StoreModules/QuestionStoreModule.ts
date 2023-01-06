@@ -34,6 +34,7 @@ import {
   reportSubmissionError,
   submitQuestion,
   SubmissionMetadata,
+  enableSubmission,
 } from 'wdk-client/Actions/QuestionActions';
 
 import {
@@ -587,8 +588,9 @@ const observeQuestionSubmit: QuestionEpic = (action$, state$, services) => actio
       };
 
       if (submissionMetadata.type === 'submit-custom-form') {
-        submissionMetadata.onStepSubmitted(services.wdkService, newSearchStepSpec);
-        return EMPTY;
+        return from(Promise.resolve(submissionMetadata.onStepSubmitted(services.wdkService, newSearchStepSpec))
+          .then(() => enableSubmission({searchName})));
+        // return EMPTY;
       }
 
       if (submissionMetadata.type === 'create-strategy') {

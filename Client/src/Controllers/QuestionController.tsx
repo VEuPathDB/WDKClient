@@ -28,7 +28,7 @@ const ActionCreators = {
 
 export type OwnProps = {
   question: string, 
-  recordClass: string, 
+  recordClass?: string, 
   FormComponent?: (props: FormProps) => JSX.Element, 
   submissionMetadata: SubmissionMetadata,
   submitButtonText?: string,
@@ -62,7 +62,6 @@ type StateProps = QuestionState & { recordClasses: GlobalData['recordClasses'] }
 type DispatchProps = { eventHandlers: typeof ActionCreators, dispatch: Dispatch };
 type Props = DispatchProps & StateProps & {
   searchName: string,
-  recordClassName: string,
   FormComponent?: FunctionComponent<FormProps>,
   submissionMetadata: SubmissionMetadata,
   submitButtonText?: string,
@@ -77,7 +76,6 @@ function QuestionController(props: Props) {
     dispatch, 
     eventHandlers, 
     searchName, 
-    recordClassName, 
     submissionMetadata, 
     FormComponent, 
     submitButtonText, 
@@ -90,8 +88,8 @@ function QuestionController(props: Props) {
   const stepId = submissionMetadata.type === 'edit-step' || submissionMetadata.type === 'submit-custom-form' ? submissionMetadata.stepId : undefined;
 
   const recordClass = useMemo(
-    () => recordClasses && recordClasses.find(({ urlSegment }) => urlSegment === recordClassName), 
-    [ recordClasses, recordClassName ]
+    () => recordClasses && recordClasses.find(({ urlSegment }) => urlSegment === state.question.outputRecordClassName), 
+    [ recordClasses, state.question.outputRecordClassName ]
   );
 
   const DefaultRenderForm: FunctionComponent<FormProps> = useCallback(
@@ -101,13 +99,13 @@ function QuestionController(props: Props) {
           type: 'questionForm',
           name: searchName,
           searchName,
-          recordClassName
+          recordClassName: state.question.outputRecordClassName
         }}
         pluginProps={props}
         fallback={<Loading />}
       />
     ),
-    [ searchName, recordClassName ] 
+    [ searchName, state.question.outputRecordClassName ] 
   );
 
   useEffect(() => {
@@ -171,7 +169,7 @@ function QuestionController(props: Props) {
           name: parameter.name,
           paramName: parameter.name,
           searchName,
-          recordClassName
+          recordClassName: state.question.outputRecordClassName
         }}
         pluginProps={{
           ctx: {
@@ -310,7 +308,6 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, Props, RootState>(
     ...stateProps,
     ...dispatchProps,
     searchName: ownProps.question,
-    recordClassName: ownProps.recordClass,
     FormComponent: ownProps.FormComponent,
     submissionMetadata: ownProps.submissionMetadata,
     submitButtonText: ownProps.submitButtonText,
