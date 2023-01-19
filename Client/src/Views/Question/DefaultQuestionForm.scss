@@ -122,11 +122,10 @@
 
   /* Parameter-specific rules */
 
-  .wdk-CheckboxList, .wdk-TreeBoxParam {
+  .wdk-TreeBoxParam {
     width: 50%;
-  }
-
-  .wdk-CheckboxListLinks, .wdk-CheckboxTreeLinks > div {
-    text-align: left;
+    max-height: 60vh;
+    display: flex;
+    flex-direction: column;
   }
 }
