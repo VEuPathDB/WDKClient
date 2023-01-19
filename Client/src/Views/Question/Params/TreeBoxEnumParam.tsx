@@ -1,7 +1,7 @@
 import 'wdk-client/Views/Question/Params/TreeBoxParam.scss';
 
 import { intersection } from 'lodash';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import CheckboxTree, { CheckboxTreeProps, LinksPosition } from '@veupathdb/coreui/dist/components/inputs/checkboxes/CheckboxTree/CheckboxTree';
 import Icon from 'wdk-client/Components/Icon/IconAlt';
@@ -23,6 +23,7 @@ import {
 } from 'wdk-client/Actions/TreeBoxEnumParamActions';
 import { Action } from 'wdk-client/Actions';
 import { DispatchAction } from 'wdk-client/Core/CommonTypes';
+import Banner from '@veupathdb/coreui/dist/components/banners/Banner';
 
 // Types
 // -----
@@ -143,6 +144,8 @@ export function TreeBoxEnumParamComponent(props: TreeBoxProps) {
   const tree = props.parameter.vocabulary;
   const selectedNodes = props.selectedValues;
   const selectedLeaves = useSelectedLeaves(tree, selectedNodes);
+  const [ isBannerDismissed, setIsBannerDismissed ] = useState<boolean>(false)
+  const shouldShowWarning = props.selectedValues.length > 5 ? true : false;
 
   const selectionCounts = useSelectionCounts(
     props.parameter.countOnlyLeaves,
@@ -157,11 +160,28 @@ export function TreeBoxEnumParamComponent(props: TreeBoxProps) {
     : props.wrapCheckboxTreeProps(checkboxTreeProps);
 
   return (
-    <div className="wdk-TreeBoxParam">
-      <SelectionInfo parameter={props.parameter} {...selectionCounts} alwaysShowCount />
-      <CheckboxTree 
-        {...wrappedCheckboxTreeProps} 
-      />
+    <div>
+      {shouldShowWarning && !isBannerDismissed && 
+        <Banner 
+          banner={{
+            type: 'warning',
+            message: (
+                <span>
+                  Selecting more than 5 organisms may result in poor performance and a cumbersome amount of data.
+                  <br/>
+                  Consider setting "My Organism Preferences" to filter by organisms of interest.
+                </span>
+            ),
+          }}
+          onClose={() => setIsBannerDismissed(true)}
+        />
+      }
+      <div className="wdk-TreeBoxParam">
+        <SelectionInfo parameter={props.parameter} {...selectionCounts} alwaysShowCount />
+        <CheckboxTree 
+          {...wrappedCheckboxTreeProps} 
+        />
+      </div>
     </div>
   );
 }
