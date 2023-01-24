@@ -43,6 +43,7 @@ export type Props = {
   onSubmit?: (e: React.FormEvent) => boolean | void;
   resetFormConfig: ResetFormConfig;
   containerClassName?: string;
+  showDescription?: boolean;
 }
 
 const cx = makeClassNameHelper('wdk-QuestionForm');
@@ -84,7 +85,8 @@ export default function DefaultQuestionForm(props: Props) {
     recordClass,
     validateForm = true,
     containerClassName,
-    resetFormConfig
+    resetFormConfig,
+    showDescription = true,
   } = props;
   const {
     question,
@@ -205,7 +207,7 @@ export default function DefaultQuestionForm(props: Props) {
           submissionDisabled={submissionDisabled}
           onClickWebservicesTutorialLink={handleWebservicesTutorialLinkClick}
         />
-        <Description description={question.description} navigatingToDescription={navigatingToDescription} />
+        {showDescription && <Description description={question.description} navigatingToDescription={navigatingToDescription} />}
       </form>
     </div>
   );

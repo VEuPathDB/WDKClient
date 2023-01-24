@@ -36,6 +36,8 @@ export function AnswerNew(props: Props) {
       <QuestionController
         question={searchName}
         submissionMetadata={submissionMetadata}
+        showDescription={false}
+        submitButtonText="Update table"
       />
       {resultType && <ResultTableSummaryViewController
         viewId={`answer:${searchName}`}

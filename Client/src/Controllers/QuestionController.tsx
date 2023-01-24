@@ -32,6 +32,7 @@ export type OwnProps = {
   FormComponent?: (props: FormProps) => JSX.Element, 
   submissionMetadata: SubmissionMetadata,
   submitButtonText?: string,
+  showDescription?: boolean,
   shouldChangeDocumentTitle?: boolean,
   /**
    * Data to provide to parameters upon initialization. Data can be parameter
@@ -69,6 +70,7 @@ type Props = DispatchProps & StateProps & {
   initialParamData?: Record<string, string>,
   autoRun: boolean,
   prepopulateWithLastParamValues: boolean
+  showDescription: boolean,
 };
 
 function QuestionController(props: Props) {
@@ -84,16 +86,17 @@ function QuestionController(props: Props) {
     initialParamData,
     autoRun,
     prepopulateWithLastParamValues,
+    showDescription,
     ...state } = props;
   const stepId = submissionMetadata.type === 'edit-step' || submissionMetadata.type === 'submit-custom-form' ? submissionMetadata.stepId : undefined;
 
   const recordClass = useMemo(
-    () => recordClasses && recordClasses.find(({ urlSegment }) => urlSegment === state.question.outputRecordClassName), 
-    [ recordClasses, state.question.outputRecordClassName ]
+    () => recordClasses && state.question && recordClasses.find(({ urlSegment }) => urlSegment === state.question.outputRecordClassName), 
+    [ recordClasses, state.question ]
   );
 
-  const DefaultRenderForm: FunctionComponent<FormProps> = useCallback(
-    (props: FormProps) => (
+  const DefaultFormComponent: FunctionComponent<FormProps> = useCallback(
+    (props: FormProps) => state.question ? (
       <Plugin<FormProps>
         context={{
           type: 'questionForm',
@@ -104,8 +107,8 @@ function QuestionController(props: Props) {
         pluginProps={props}
         fallback={<Loading />}
       />
-    ),
-    [ searchName, state.question.outputRecordClassName ] 
+    ) : null,
+    [ searchName, state.question ] 
   );
 
   useEffect(() => {
@@ -161,8 +164,8 @@ function QuestionController(props: Props) {
   if (state.questionStatus !== 'complete') return null;
 
   const parameterElements = mapValues(
-    state.question.parametersByName,
-    parameter => (
+    state.question?.parametersByName,
+    parameter => state.question ? (
       <Plugin
         context={{
           type: 'questionFormParameter',
@@ -191,7 +194,7 @@ function QuestionController(props: Props) {
           dispatch: dispatch
         }}
       />
-    )
+    ) : null
   );
 
   return FormComponent
@@ -204,8 +207,9 @@ function QuestionController(props: Props) {
         submitButtonText={submitButtonText}
         recordClass={recordClass}
         resetFormConfig={resetFormConfig}
+        showDescription={showDescription}
       />
-    : <DefaultRenderForm
+    : <DefaultFormComponent
         parameterElements={parameterElements}
         state={state}
         eventHandlers={eventHandlers}
@@ -214,6 +218,7 @@ function QuestionController(props: Props) {
         submitButtonText={submitButtonText}
         recordClass={recordClass}
         resetFormConfig={resetFormConfig}
+        showDescription={showDescription}
       />;
 }
 
@@ -314,7 +319,8 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, Props, RootState>(
     shouldChangeDocumentTitle: ownProps.shouldChangeDocumentTitle,
     initialParamData: ownProps.initialParamData,
     autoRun: ownProps.autoRun === true,
-    prepopulateWithLastParamValues: ownProps.prepopulateWithLastParamValues === true
+    prepopulateWithLastParamValues: ownProps.prepopulateWithLastParamValues === true,
+    showDescription: ownProps.showDescription ?? true,
   })
 )
 
