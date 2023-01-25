@@ -1,7 +1,7 @@
 import 'wdk-client/Views/Question/Params/TreeBoxParam.scss';
 
 import { intersection } from 'lodash';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import CheckboxTree, { CheckboxTreeProps, LinksPosition } from '@veupathdb/coreui/dist/components/inputs/checkboxes/CheckboxTree/CheckboxTree';
 import Icon from 'wdk-client/Components/Icon/IconAlt';
@@ -144,7 +144,6 @@ export function TreeBoxEnumParamComponent(props: TreeBoxProps) {
   const tree = props.parameter.vocabulary;
   const selectedNodes = props.selectedValues;
   const selectedLeaves = useSelectedLeaves(tree, selectedNodes);
-  const [ isBannerDismissed, setIsBannerDismissed ] = useState<boolean>(false)
   const shouldShowWarning = props.selectedValues.length > 5 ? true : false;
 
   const selectionCounts = useSelectionCounts(
@@ -161,10 +160,9 @@ export function TreeBoxEnumParamComponent(props: TreeBoxProps) {
 
   return (
     <div>
-      {shouldShowWarning && !isBannerDismissed && 
         <Banner 
           banner={{
-            type: 'warning',
+            type: shouldShowWarning ? 'warning' : 'info',
             message: (
                 <span>
                   Selecting more than 5 organisms may result in poor performance and a cumbersome amount of data.
@@ -173,9 +171,7 @@ export function TreeBoxEnumParamComponent(props: TreeBoxProps) {
                 </span>
             ),
           }}
-          onClose={() => setIsBannerDismissed(true)}
         />
-      }
       <div className="wdk-TreeBoxParam">
         <SelectionInfo parameter={props.parameter} {...selectionCounts} alwaysShowCount />
         <CheckboxTree 
