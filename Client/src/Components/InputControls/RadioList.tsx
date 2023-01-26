@@ -14,6 +14,7 @@ type Props = {
     value: string;
     description?: string;
     disabled?: boolean;
+    body?: ReactNode;
   }>;
   /** Value of the radio input element that should be checked **/
   value?: string;
@@ -69,6 +70,11 @@ class RadioList extends React.Component<Props> {
                 </HelpIcon>
               }
             </label>
+          {item.body &&
+            <div style={item.value === this.props.value ? {} : {display: "none"}}>
+              {item.body}
+            </div>
+          }
           </li>
         ))}
       </ul>
@@ -78,3 +84,4 @@ class RadioList extends React.Component<Props> {
 }
 
 export default wrappable(RadioList)
+
