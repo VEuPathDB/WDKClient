@@ -48,6 +48,7 @@ export type IndividualNode = OntologyNode<{
   wdkReference: {
     name: string;
     displayName: string;
+    description?: string;
     help?: string;
     summary?: string;
     description?: string;
@@ -99,7 +100,7 @@ export function getDisplayName(node: CategoryTreeNode) {
 }
 
 export function getDescription(node: CategoryTreeNode) {
-  return isIndividual(node) ? node.wdkReference.help
+  return isIndividual(node) ? node.wdkReference.description
        : getPropertyValue('hasDefinition', node);
 }
 
@@ -243,7 +244,7 @@ export function BasicNodeComponent(props: {node: CategoryTreeNode}) {
  */
 export function nodeSearchPredicate(node: CategoryTreeNode, searchQueryTerms: string[]): boolean {
   return areTermsInString(searchQueryTerms, getDisplayName(node) + ' ' +
-                          getTooltipContent(node));
+    getTooltipContent(node) + ' ' + getDescription(node));
 }
 
 /**
